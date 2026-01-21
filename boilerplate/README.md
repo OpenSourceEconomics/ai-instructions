@@ -21,10 +21,41 @@ what the project actually contains.
 | **Docstring style** | Google |
 | **Line length** | 88 |
 | **Linter/formatter** | ruff with `select = ["ALL"]` |
-| **Ordering** | Alphabetical within all blocks |
+| **Ordering** | Alphabetical within blocks (not at outermost section level) |
 | **Package manager** | pixi only (no venv/env) |
 | **pytest markers** | Only add when actually used |
 | **Type checker** | ty (not mypy) |
+
+## pyproject.toml Section Order
+
+Sections should appear in this logical order (not alphabetical at the outermost level):
+
+1. `[project]` - Project metadata
+2. `[build-system]` - Build system configuration
+3. `[tool.hatch.*]` - Hatch build settings
+4. `[tool.pixi.*]` - Pixi environment/dependency management
+5. `[tool.ruff.*]` - Linting configuration
+6. `[tool.ty.*]` - Type checking configuration
+7. `[tool.pytest.*]` - Testing configuration
+8. `[tool.pytask.*]` - Task runner configuration
+9. `[tool.yamlfix]` - YAML formatting
+10. Other tools (mypy, etc.)
+
+## Pixi Environment and Task Naming
+
+### Environments
+
+Environments should be from the set: `{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, test, docs}`
+
+Can be combined like: `py314-jax`, `test-cuda13`
+
+### Tasks
+
+Tasks should be from the set: `{test, test-cov, test-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
+
+- Always use `test`, never `tests`
+- `ty` task should run `ty check`
+- Include `ty` in the test feature (not as a separate environment)
 
 ---
 
@@ -33,80 +64,6 @@ what the project actually contains.
 ### Tier A/B: Full Configuration
 
 ```toml
-# ======================================================================================
-# Build system configuration
-# ======================================================================================
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling", "hatch-vcs"]
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/project_name/_version.py"
-
-[tool.hatch.build.targets.sdist]
-exclude = ["tests"]
-only-packages = true
-
-[tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.version]
-source = "vcs"
-
-
-# ======================================================================================
-# Pixi configuration
-# ======================================================================================
-
-[tool.pixi.dependencies]
-jupyterlab = "*"
-pre-commit = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
-
-[tool.pixi.environments]
-py311 = ["py311", "test"]
-py312 = ["py312", "test"]
-py313 = ["py313", "test"]
-py314 = ["py314", "test"]
-ty = ["ty"]
-
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
-
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
-
-[tool.pixi.feature.py314.dependencies]
-python = "~=3.14.0"
-
-[tool.pixi.feature.test.tasks]
-tests = "pytest tests"
-
-[tool.pixi.feature.ty.pypi-dependencies]
-ty = ">=0.0.9"
-
-[tool.pixi.feature.ty.tasks]
-ty = "ty check"
-
-[tool.pixi.pypi-dependencies]
-pdbp = "*"
-project-name = { path = ".", editable = true }
-
-[tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
-
-
 # ======================================================================================
 # Project metadata
 # ======================================================================================
@@ -143,22 +100,73 @@ Tracker = "https://github.com/org/project-name/issues"
 
 
 # ======================================================================================
-# pytest configuration
+# Build system configuration
 # ======================================================================================
 
-[tool.pytest.ini_options]
-addopts = ["--pdbcls=pdbp:Pdb"]
-filterwarnings = []
-norecursedirs = ["docs"]
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling", "hatch-vcs"]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/project_name/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests"]
+only-packages = true
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+source = "vcs"
 
 
 # ======================================================================================
-# pytask configuration
+# Pixi configuration
 # ======================================================================================
 
-[tool.pytask.ini_options]
-paths = ["./src/project_name"]
-pdbcls = "pdbp:Pdb"
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[tool.pixi.dependencies]
+jupyterlab = "*"
+pre-commit = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[tool.pixi.pypi-dependencies]
+pdbp = "*"
+project-name = { path = ".", editable = true }
+ty = ">=0.0.9"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
+
+[tool.pixi.feature.test.tasks]
+test = "pytest tests"
+test-cov = "pytest tests --cov-report=xml --cov=./"
+ty = "ty check"
+
+[tool.pixi.environments]
+py311 = ["py311", "test"]
+py312 = ["py312", "test"]
+py313 = ["py313", "test"]
+py314 = ["py314", "test"]
 
 
 # ======================================================================================
@@ -221,6 +229,25 @@ useless-overload-body = "error"
 
 
 # ======================================================================================
+# pytest configuration
+# ======================================================================================
+
+[tool.pytest.ini_options]
+addopts = ["--pdbcls=pdbp:Pdb"]
+filterwarnings = []
+norecursedirs = ["docs"]
+
+
+# ======================================================================================
+# pytask configuration
+# ======================================================================================
+
+[tool.pytask.ini_options]
+paths = ["./src/project_name"]
+pdbcls = "pdbp:Pdb"
+
+
+# ======================================================================================
 # yamlfix configuration
 # ======================================================================================
 
@@ -234,15 +261,6 @@ sequence_style = "block_style"
 
 ```toml
 # ======================================================================================
-# Build system configuration
-# ======================================================================================
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
-
-
-# ======================================================================================
 # Project metadata
 # ======================================================================================
 
@@ -250,6 +268,15 @@ requires = ["hatchling"]
 name = "project-name"
 requires-python = ">=3.13"
 version = "0.1.0"
+
+
+# ======================================================================================
+# Build system configuration
+# ======================================================================================
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
 
 
 # ======================================================================================
@@ -287,6 +314,8 @@ convention = "google"
 ---
 
 ## .pre-commit-config.yaml
+
+**Note:** Do NOT alphabetize the outermost level (`ci`, `repos`). Keep logical order.
 
 ### Tier A/B: Full Configuration
 
@@ -449,7 +478,7 @@ yaml-files:
 
 ## .gitignore
 
-All entries are alphabetically ordered. Only pixi is used (no venv/env).
+All entries are alphabetically ordered within sections. Only pixi is used (no venv/env).
 
 ### Tier A: Libraries
 
