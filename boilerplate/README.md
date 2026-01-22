@@ -45,17 +45,16 @@ Sections should appear in this logical order (not alphabetical at the outermost 
 
 ### Environments
 
-Environments should be from the set: `{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, test, docs}`
+Environments should be from the set: `{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
 
-Can be combined like: `py314-jax`, `test-cuda13`
+Can be combined like: `py314-jax`, `tests-cuda13`
 
 ### Tasks
 
-Tasks should be from the set: `{test, test-cov, test-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
+Tasks should be from the set: `{tests, tests-with-cov, tests-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
 
-- Always use `test`, never `tests`
 - `ty` task should run `ty check`
-- Include `ty` in the test feature (not as a separate environment)
+- Include `ty` in the tests feature (not as a separate environment and not in the general pypi dependencies)
 
 ---
 
@@ -157,16 +156,16 @@ python = "~=3.13.0"
 [tool.pixi.feature.py314.dependencies]
 python = "~=3.14.0"
 
-[tool.pixi.feature.test.tasks]
-test = "pytest tests"
-test-cov = "pytest tests --cov-report=xml --cov=./"
+[tool.pixi.feature.tests.tasks]
+tests = "pytest"
+tests-with-cov = "pytest --cov-report=xml --cov=./"
 ty = "ty check"
 
 [tool.pixi.environments]
-py311 = ["py311", "test"]
-py312 = ["py312", "test"]
-py313 = ["py313", "test"]
-py314 = ["py314", "test"]
+py311 = ["py311", "tests"]
+py312 = ["py312", "tests"]
+py313 = ["py313", "tests"]
+py314 = ["py314", "tests"]
 
 
 # ======================================================================================
