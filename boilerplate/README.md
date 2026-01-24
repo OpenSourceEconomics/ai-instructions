@@ -135,14 +135,16 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 [tool.pixi.dependencies]
 jupyterlab = "*"
 pre-commit = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
 
 [tool.pixi.pypi-dependencies]
 pdbp = "*"
 project-name = { path = ".", editable = true }
+
+[tool.pixi.feature.tests.pypi-dependencies]
 ty = ">=0.0.9"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -174,7 +176,7 @@ py314 = ["py314", "tests"]
 
 [tool.ruff]
 fix = true
-target-version = "py311"
+target-version = "py314"
 unsafe-fixes = false
 
 [tool.ruff.lint]
