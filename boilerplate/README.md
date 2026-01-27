@@ -142,40 +142,23 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
 jupyterlab = "*"
-pre-commit = "*"
+prek = "*"
+python = "~=3.14.0"
 
 [tool.pixi.pypi-dependencies]
 pdbp = "*"
 project-name = { path = ".", editable = true }
 
 [tool.pixi.feature.tests.pypi-dependencies]
-ty = ">=0.0.9"
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
-
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
-
-[tool.pixi.feature.py314.dependencies]
-python = "~=3.14.0"
+ty = "*"
 
 [tool.pixi.feature.tests.tasks]
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
 ty = "ty check"
-
-[tool.pixi.environments]
-py311 = ["py311", "tests"]
-py312 = ["py312", "tests"]
-py313 = ["py313", "tests"]
-py314 = ["py314", "tests"]
 
 
 # ======================================================================================
@@ -303,6 +286,7 @@ extend-ignore = [
     "EM102",    # Exception must not use an f-string literal
     "ISC001",   # Conflicts with ruff-format
     "S101",     # Use of assert
+    "TC001",    # Move application import into a type-checking block
     "TC002",    # Move third-party import into a type-checking block
     "TC003",    # Move standard library import into a type-checking block
     "TRY003",   # Long messages outside exception class
@@ -440,7 +424,7 @@ ci:
 
 ## .yamllint.yml
 
-Use with all tiers that have pre-commit.
+Use with all tiers that have prek.
 
 ```yaml
 ---
