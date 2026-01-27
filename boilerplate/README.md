@@ -2,29 +2,37 @@
 
 Common boilerplate configurations for project/repository setup.
 
+- Apply these rules to a project configuration. Ask about which project tier the project
+  belongs to, do not try to determine it yourself.
+- Do NOT overwrite exclusions of `ruff` tools / `ty` configuration / etc. unless
+  explicitly asked to do this. 
+- In case there is a pre-existing `uv` setup, do NOT add `pixi`.
+- If a GitHub Actions workflow exists, update that if necessary.
+
+
 ## Project Tiers
 
 Project tiers are based on **content complexity**, not project type. Choose the tier based on
 what the project actually contains.
 
-| Tier | Description | Indicators |
-|------|-------------|------------|
-| **A: Full** | Installable packages, complex research | Has `src/` layout, tests, multiple dependencies |
-| **B: Standard** | Research with pytask, courses with notebooks | Uses pytask, has data processing |
-| **C: Minimal** | Documentation, simple LaTeX projects, notes | No Python code or very minimal |
+| Tier            | Description                                  | Indicators                                      |
+| --------------- | -------------------------------------------- | ----------------------------------------------- |
+| **A: Full**     | Installable packages, complex research       | Has `src/` layout, tests, multiple dependencies |
+| **B: Standard** | Research with pytask, courses with notebooks | Uses pytask, has data processing                |
+| **C: Minimal**  | Documentation, simple LaTeX projects, notes  | No Python code or very minimal                  |
 
 ## Key Conventions
 
-| Aspect | Convention |
-|--------|------------|
-| **Build backend** | hatchling + hatch-vcs |
-| **Docstring style** | Google |
-| **Line length** | 88 |
-| **Linter/formatter** | ruff with `select = ["ALL"]` |
-| **Ordering** | Alphabetical within blocks (not at outermost section level) |
-| **Package manager** | pixi only (no venv/env) |
-| **pytest markers** | Only add when actually used |
-| **Type checker** | ty (not mypy) |
+| Aspect               | Convention                                                  |
+| -------------------- | ----------------------------------------------------------- |
+| **Build backend**    | hatchling + hatch-vcs                                       |
+| **Docstring style**  | Google                                                      |
+| **Line length**      | 88                                                          |
+| **Linter/formatter** | ruff with `select = ["ALL"]`                                |
+| **Ordering**         | Alphabetical within blocks (not at outermost section level) |
+| **Package manager**  | pixi only (no venv/env)                                     |
+| **pytest markers**   | Only add when actually used                                 |
+| **Type checker**     | ty (not mypy)                                               |
 
 ## pyproject.toml Section Order
 
@@ -181,26 +189,23 @@ unsafe-fixes = false
 
 [tool.ruff.lint]
 extend-ignore = [
-    "ANN",      # Type annotations (use ty instead)
-    "COM812",   # Conflicts with ruff-format
-    "D",        # Docstrings (enable selectively when ready)
-    "EM101",    # Exception must not use a string literal
-    "EM102",    # Exception must not use an f-string literal
-    "FBT001",   # Boolean-typed positional argument
-    "FBT002",   # Boolean default positional argument
-    "FIX002",   # Line contains TODO
-    "ISC001",   # Conflicts with ruff-format
-    "PLR0913",  # Too many arguments
-    "PLR2004",  # Magic value used in comparison
-    "S101",     # Use of assert
-    "TC002",    # Move third-party import into a type-checking block
-    "TC003",    # Move standard library import into a type-checking block
-    "TRY003",   # Long messages outside exception class
+  "COM812",   # Conflicts with ruff-format
+  "EM101",    # Exception must not use a string literal
+  "EM102",    # Exception must not use an f-string literal
+  "FIX002",   # Line contains TODO
+  "ISC001",   # Conflicts with ruff-format
+  "TC001",    # Move application import into a type-checking block
+  "TC002",    # Move third-party import into a type-checking block
+  "TC003",    # Move standard library import into a type-checking block
+  "TRY003",   # Long messages outside exception class
 ]
 select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["INP001"]
+"tests/*" = [
+  "INP001",  # Implicit namespace packages
+  "S101",    # Use of assert
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -217,6 +222,7 @@ division-by-zero = "error"
 ignore-comment-unknown-rule = "error"
 invalid-argument-type = "error"
 invalid-ignore-comment = "error"
+invalid-return-type = "error"
 possibly-missing-attribute = "error"
 possibly-missing-implicit-call = "error"
 possibly-missing-import = "error"
@@ -295,12 +301,7 @@ extend-ignore = [
     "D",        # Docstrings
     "EM101",    # Exception must not use a string literal
     "EM102",    # Exception must not use an f-string literal
-    "FBT001",   # Boolean-typed positional argument
-    "FBT002",   # Boolean default positional argument
-    "FIX002",   # Line contains TODO
     "ISC001",   # Conflicts with ruff-format
-    "PLR0913",  # Too many arguments
-    "PLR2004",  # Magic value used in comparison
     "S101",     # Use of assert
     "TC002",    # Move third-party import into a type-checking block
     "TC003",    # Move standard library import into a type-checking block
@@ -322,13 +323,15 @@ convention = "google"
 
 ```yaml
 ---
-ci:
-  autoupdate_schedule: monthly
 repos:
   - repo: meta
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
+  - repo: https://github.com/tox-dev/tox-toml-fmt
+    rev: v1.2.2
+    hooks:
+      - id: tox-toml-fmt
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.19.1
     hooks:
@@ -395,19 +398,20 @@ repos:
       - id: mdformat
         additional_dependencies:
           - mdformat-gfm
+          - mdformat-gfm-alerts
           - mdformat-ruff
         args:
           - --wrap
-          - '88'
+          - "88"
         files: (CLAUDE\.md|README\.md)
+ci:
+  autoupdate_schedule: monthly
 ```
 
 ### Tier C: Minimal Configuration
 
 ```yaml
 ---
-ci:
-  autoupdate_schedule: monthly
 repos:
   - repo: meta
     hooks:
@@ -428,6 +432,8 @@ repos:
         args:
           - --fix
       - id: ruff-format
+ci:
+  autoupdate_schedule: monthly
 ```
 
 ---
@@ -454,7 +460,7 @@ rules:
   empty-values: disable
   float-values: disable
   hyphens: enable
-  indentation: {spaces: 2}
+  indentation: { spaces: 2 }
   key-duplicates: enable
   key-ordering: disable
   line-length:
@@ -470,8 +476,8 @@ rules:
   truthy:
     level: warning
 yaml-files:
-  - '*.yaml'
-  - '*.yml'
+  - "*.yaml"
+  - "*.yml"
   - .yamllint
 ```
 
