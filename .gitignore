@@ -1,19 +1,16 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Editor directories and files
+# IDE
 .idea/
 .vscode/
-*.swp
-*.swo
-*~
 
-# OS generated files
+# macOS
 .DS_Store
-Thumbs.db
 
-# Environment
-.env
+# pixi
 .pixi/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Ruff
+.ruff_cache/

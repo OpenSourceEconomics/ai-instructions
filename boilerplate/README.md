@@ -5,7 +5,7 @@ Common boilerplate configurations for project/repository setup.
 - Apply these rules to a project configuration. Ask about which project tier the project
   belongs to, do not try to determine it yourself.
 - Do NOT overwrite exclusions of `ruff` tools / `ty` configuration / etc. unless
-  explicitly asked to do this. 
+  explicitly asked to do this.
 - In case there is a pre-existing `uv` setup, do NOT add `pixi`.
 - If a GitHub Actions workflow exists, update that if necessary.
 
