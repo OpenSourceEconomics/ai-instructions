@@ -9,11 +9,10 @@ Common boilerplate configurations for project/repository setup.
 - In case there is a pre-existing `uv` setup, do NOT add `pixi`.
 - If a GitHub Actions workflow exists, update that if necessary.
 
-
 ## Project Tiers
 
-Project tiers are based on **content complexity**, not project type. Choose the tier based on
-what the project actually contains.
+Project tiers are based on **content complexity**, not project type. Choose the tier
+based on what the project actually contains.
 
 | Tier            | Description                                  | Indicators                                      |
 | --------------- | -------------------------------------------- | ----------------------------------------------- |
@@ -39,32 +38,35 @@ what the project actually contains.
 Sections should appear in this logical order (not alphabetical at the outermost level):
 
 1. `[project]` - Project metadata
-2. `[build-system]` - Build system configuration
-3. `[tool.hatch.*]` - Hatch build settings
-4. `[tool.pixi.*]` - Pixi environment/dependency management
-5. `[tool.ruff.*]` - Linting configuration
-6. `[tool.ty.*]` - Type checking configuration
-7. `[tool.pytest.*]` - Testing configuration
-8. `[tool.pytask.*]` - Task runner configuration
-9. `[tool.yamlfix]` - YAML formatting
-10. Other tools (mypy, etc.)
+1. `[build-system]` - Build system configuration
+1. `[tool.hatch.*]` - Hatch build settings
+1. `[tool.pixi.*]` - Pixi environment/dependency management
+1. `[tool.ruff.*]` - Linting configuration
+1. `[tool.ty.*]` - Type checking configuration
+1. `[tool.pytest.*]` - Testing configuration
+1. `[tool.pytask.*]` - Task runner configuration
+1. `[tool.yamlfix]` - YAML formatting
+1. Other tools (mypy, etc.)
 
 ## Pixi Environment and Task Naming
 
 ### Environments
 
-Environments should be from the set: `{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
+Environments should be from the set:
+`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
 
 Can be combined like: `py314-jax`, `tests-cuda13`
 
 ### Tasks
 
-Tasks should be from the set: `{tests, tests-with-cov, tests-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
+Tasks should be from the set:
+`{tests, tests-with-cov, tests-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
 
 - `ty` task should run `ty check`
-- Include `ty` in the tests feature (not as a separate environment and not in the general pypi dependencies)
+- Include `ty` in the tests feature (not as a separate environment and not in the
+  general pypi dependencies)
 
----
+______________________________________________________________________
 
 ## pyproject.toml
 
@@ -297,7 +299,7 @@ select = ["ALL"]
 convention = "google"
 ```
 
----
+______________________________________________________________________
 
 ## .pre-commit-config.yaml
 
@@ -420,7 +422,7 @@ ci:
   autoupdate_schedule: monthly
 ```
 
----
+______________________________________________________________________
 
 ## .yamllint.yml
 
@@ -465,7 +467,7 @@ yaml-files:
   - .yamllint
 ```
 
----
+______________________________________________________________________
 
 ## .gitignore
 
@@ -474,6 +476,9 @@ All entries are alphabetically ordered within sections. Only pixi is used (no ve
 ### Tier A: Libraries
 
 ```gitignore
+# Claude Code
+.claude/
+
 # Distribution / packaging
 *.egg
 *.egg-info/
@@ -528,6 +533,9 @@ src/*/_version.py
 ### Tier B: Research Projects
 
 ```gitignore
+# Claude Code
+.claude/
+
 # Data files
 *.parquet
 *.pkl
@@ -605,6 +613,9 @@ src/*/_version.py
 ### Tier C: Minimal
 
 ```gitignore
+# Claude Code
+.claude/
+
 # IDE
 .idea/
 .vscode/

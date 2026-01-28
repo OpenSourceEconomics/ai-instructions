@@ -1,9 +1,10 @@
 # AI Coding Standards
 
 This document provides coding guidelines for AI agents, derived from the
-[Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/) course.
+[Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/)
+course.
 
----
+______________________________________________________________________
 
 # Background
 
@@ -11,15 +12,15 @@ This document provides coding guidelines for AI agents, derived from the
 
 ### Key Knowledge
 
-- There are two broad lines of operating systems: Unix-based/inspired (Linux, MacOS)
-  and Windows.
+- There are two broad lines of operating systems: Unix-based/inspired (Linux, MacOS) and
+  Windows.
 - Linux and MacOS share Unix heritage, which means they have similar behaviors for many
   programming tasks.
 - Windows has a completely separate history from Unix (originating from MS-DOS).
 - Code that works on one operating system may not work on another due to fundamental
   differences.
-- There are signs of convergence: Windows Subsystem for Linux (WSL) allows running
-  Linux on Windows.
+- There are signs of convergence: Windows Subsystem for Linux (WSL) allows running Linux
+  on Windows.
 
 ### DO
 
@@ -34,7 +35,7 @@ This document provides coding guidelines for AI agents, derived from the
 - Hardcode platform-specific assumptions without proper conditionals.
 - Ignore platform differences when writing installation or setup instructions.
 
----
+______________________________________________________________________
 
 ## File Systems
 
@@ -72,6 +73,7 @@ This document provides coding guidelines for AI agents, derived from the
 ```python
 # GOOD: Cross-platform path handling
 from pathlib import Path
+
 data_path = Path("data") / "input" / "file.csv"
 
 # BAD: Hardcoded Windows path
@@ -84,7 +86,7 @@ data_path = "/home/user/data/file.csv"
 data_path = "data/input/file.csv"
 ```
 
----
+______________________________________________________________________
 
 ## Floating Point Numbers
 
@@ -121,20 +123,23 @@ if result == 0.3:
 
 # GOOD: Use tolerance-based comparison
 import math
+
 if math.isclose(result, 0.3, rel_tol=1e-9):
     print("Close enough")
 
 # GOOD: NumPy equivalent
 import numpy as np
+
 if np.isclose(result, 0.3):
     print("Close enough")
 
 # For financial calculations, consider:
 from decimal import Decimal
+
 price = Decimal("19.99")
 ```
 
----
+______________________________________________________________________
 
 ## Graph Theory Basics
 
@@ -173,15 +178,15 @@ price = Decimal("19.99")
 
 ### Graph Type Quick Reference
 
-| Type | Directed | Cycles Allowed | Key Property |
-|------|----------|----------------|--------------|
-| Chain | Can be either | No | Linear sequence |
-| Tree | Undirected | No | One path between nodes |
-| Arborescence | Yes | No | Each node has one parent |
-| DAG | Yes | No | No directed cycles |
-| General Graph | Either | Yes | Most flexible |
+| Type          | Directed      | Cycles Allowed | Key Property             |
+| ------------- | ------------- | -------------- | ------------------------ |
+| Chain         | Can be either | No             | Linear sequence          |
+| Tree          | Undirected    | No             | One path between nodes   |
+| Arborescence  | Yes           | No             | Each node has one parent |
+| DAG           | Yes           | No             | No directed cycles       |
+| General Graph | Either        | Yes            | Most flexible            |
 
----
+______________________________________________________________________
 
 # Tools
 
@@ -189,10 +194,10 @@ price = Decimal("19.99")
 
 ### DO use the shell for:
 
-- **Package installation and environment management** - No GUI alternative exists;
-  shell is required
-- **Version control with git** - Shell is the recommended approach over Git GUIs or
-  VS Code integrations
+- **Package installation and environment management** - No GUI alternative exists; shell
+  is required
+- **Version control with git** - Shell is the recommended approach over Git GUIs or VS
+  Code integrations
 - **Running tests** for Python projects
 - **Running automated research pipelines**
 
@@ -204,10 +209,9 @@ price = Decimal("19.99")
 
 ### DON'T use the shell for:
 
-- Editing files with vim when a modern editor is available - use a modern editor
-  instead
+- Editing files with vim when a modern editor is available - use a modern editor instead
 
----
+______________________________________________________________________
 
 ## File System Navigation
 
@@ -221,37 +225,38 @@ price = Decimal("19.99")
 
 #### Unix/Linux/macOS Commands
 
-| Command | Purpose |
-|---------|---------|
-| `pwd` | Print the current working directory |
+| Command     | Purpose                                |
+| ----------- | -------------------------------------- |
+| `pwd`       | Print the current working directory    |
 | `cd <path>` | Change directory to the specified path |
-| `cd ..` | Move to the parent directory |
-| `cd ~` | Move to the home directory |
-| `ls` | List contents of the current directory |
+| `cd ..`     | Move to the parent directory           |
+| `cd ~`      | Move to the home directory             |
+| `ls`        | List contents of the current directory |
 
 #### Windows PowerShell Commands
 
-| Command | Purpose |
-|---------|---------|
-| `Get-Location` (or `pwd`) | Print the current working directory |
+| Command                                | Purpose                                |
+| -------------------------------------- | -------------------------------------- |
+| `Get-Location` (or `pwd`)              | Print the current working directory    |
 | `Set-Location <path>` (or `cd <path>`) | Change directory to the specified path |
-| `cd ..` | Move to the parent directory |
-| `Get-ChildItem` (or `ls`) | List contents of the current directory |
+| `cd ..`                                | Move to the parent directory           |
+| `Get-ChildItem` (or `ls`)              | List contents of the current directory |
 
----
+______________________________________________________________________
 
 ## Best Practices for Shell Usage
 
 ### DO
 
-1. **Always verify the current working directory** before executing commands that
-   depend on relative paths - use `pwd` (Unix) or `Get-Location` (Windows)
+1. **Always verify the current working directory** before executing commands that depend
+   on relative paths - use `pwd` (Unix) or `Get-Location` (Windows)
 
-2. **Use absolute paths** when precision is critical to avoid ambiguity about file
+1. **Use absolute paths** when precision is critical to avoid ambiguity about file
    locations
 
-3. **Store projects close to the home directory** to minimize typing and simplify
+1. **Store projects close to the home directory** to minimize typing and simplify
    navigation. Recommended structure:
+
    ```
    /home/username/projects/
        project_1/
@@ -262,21 +267,21 @@ price = Decimal("19.99")
            final_project/
    ```
 
-4. **Verify navigation with pwd** after using `cd` to confirm you are in the expected
+1. **Verify navigation with pwd** after using `cd` to confirm you are in the expected
    directory
 
-5. **Use ls/Get-ChildItem** to inspect directory contents before operating on files
+1. **Use ls/Get-ChildItem** to inspect directory contents before operating on files
 
 ### DON'T
 
 1. **Don't assume the working directory** - always check with `pwd` when uncertain
 
-2. **Don't mix path separators** - use `/` for Unix/macOS and `\` for Windows
+1. **Don't mix path separators** - use `/` for Unix/macOS and `\` for Windows
 
-3. **Don't forget that `cd ..`** moves to the parent directory, not a directory
+1. **Don't forget that `cd ..`** moves to the parent directory, not a directory
    literally named `..`
 
----
+______________________________________________________________________
 
 # Git
 
@@ -285,42 +290,49 @@ price = Decimal("19.99")
 ### Creating Repositories
 
 **DO:**
+
 - Use `git init` to convert a normal folder into a git repository
 - This creates a `.git` folder that tracks your project
 
 **DON'T:**
+
 - Assume `git init` uploads anything to GitHub (it does not)
 - Create nested git repositories (avoid `git init` inside an existing repo)
 
 ### Cloning Repositories
 
 **DO:**
+
 - Use `git clone <URL>` to download a repository from GitHub
 - Clone creates a linked copy that can be synchronized with the remote
 
 **DON'T:**
+
 - Download repositories as zip files (this loses the git history and remote link)
 - Confuse cloning with downloading
 
----
+______________________________________________________________________
 
 ## Staging and Committing
 
 ### The Staging Area
 
 **DO:**
+
 - Use `git status` to check which files are untracked, modified, or staged
 - Use `git add <file>` to stage specific files for the next commit
 - Use `git add .` to stage all changes (use with caution)
 - Use `git reset` to unstage all staged files if needed
 
 **DON'T:**
+
 - Commit without first staging the relevant files
 - Assume all modified files are automatically included in commits
 
 ### Making Commits
 
 **DO:**
+
 - Write descriptive commit messages that explain the "why" not just the "what"
 - Use `git commit -m "Your message"` for simple commits
 - Use `git commit -am "Your message"` to stage and commit all modified files in one step
@@ -328,6 +340,7 @@ price = Decimal("19.99")
 - Use `git log` to inspect commit history
 
 **DON'T:**
+
 - Use `git commit -am` for untracked files (it only works for already-tracked files)
 - Write vague commit messages like "fixed stuff" or "updates"
 - Create commits automatically without user intent
@@ -335,21 +348,24 @@ price = Decimal("19.99")
 ### Commit Message Best Practices
 
 **DO:**
+
 - Start with a short summary line (50 characters or less)
 - Use imperative mood ("Add feature" not "Added feature")
 - Explain what changed and why
 
 **DON'T:**
+
 - Write overly long single-line messages
 - Omit context that future readers will need
 
----
+______________________________________________________________________
 
 ## Branches
 
 ### Working with Branches
 
 **DO:**
+
 - Use branches to try out changes without affecting the stable main branch
 - Use `git branch <name>` or `git checkout -b <name>` to create new branches
 - Use `git branch` (no arguments) to see which branch you are on
@@ -357,6 +373,7 @@ price = Decimal("19.99")
 - Use `git branch -d <name>` to delete branches after merging
 
 **DON'T:**
+
 - Make experimental changes directly on the main branch
 - Forget which branch you are working on before making commits
 - Delete branches that have unmerged changes without warning
@@ -364,115 +381,126 @@ price = Decimal("19.99")
 ### Creating Feature Branches (Recommended Workflow)
 
 1. `git checkout main` - Switch to main branch
-2. `git pull` - Get latest changes from remote
-3. `git checkout -b feature_branch` - Create and switch to new branch
+1. `git pull` - Get latest changes from remote
+1. `git checkout -b feature_branch` - Create and switch to new branch
 
----
+______________________________________________________________________
 
 ## Merging and Conflict Resolution
 
 ### Merging Branches
 
 **DO:**
+
 - To merge branch `a` into branch `b`:
   1. `git checkout b` - Switch to the target branch
-  2. `git merge a` - Merge the source branch into current branch
+  1. `git merge a` - Merge the source branch into current branch
 - Understand the difference between fast-forward and recursive merge strategies
 
 **DON'T:**
+
 - Merge without being on the correct target branch
 - Panic if merge conflicts occur
 
 ### Resolving Merge Conflicts
 
 **DO:**
+
 - Modify the conflicting files manually to resolve conflicts
 - After resolving, use `git add <file>` to stage the resolved files
 - Then use `git commit` to complete the merge
 - Read conflict markers carefully (`<<<<<<<`, `=======`, `>>>>>>>`)
 
 **DON'T:**
+
 - Use `git reset` to "fix" merge conflicts
 - Expect a `git resolve conflict` command (it does not exist)
 - Leave conflict markers in committed files
 
----
+______________________________________________________________________
 
 ## Undoing Things
 
 ### Safe Operations
 
 **DO:**
+
 - Use `git checkout <commit-hash>` to browse earlier versions (safe, non-destructive)
 - Use `git checkout main` to return from detached HEAD state
 - Use `git revert <commit>` to create a new commit that undoes a specific commit
 
 **DON'T:**
+
 - Panic when in detached HEAD mode
 - Type random git commands hoping to fix things
 
 ### Destructive Operations (Use with Extreme Caution)
 
 **DO:**
+
 - Use `git reset --hard` only when you truly want to permanently delete commits
 - Understand that `git reset --hard` deletes commits and resets local files
 
 **DON'T:**
+
 - Use `git reset --hard` without understanding the consequences
 - Use destructive commands on shared branches
 - Modify commit history after pushing to a shared remote
 
----
+______________________________________________________________________
 
 ## Pre-commit Hooks
 
 ### Working with Pre-commit Hooks
 
 **DO:**
+
 - Run `pre-commit install` once after cloning a repository with hooks
-- Use `git commit -am "message"` to stage and commit (important because hooks run on staged files)
+- Use `git commit -am "message"` to stage and commit (important because hooks run on
+  staged files)
 - If the first commit fails, simply try again (hooks may have auto-fixed issues)
 - If the second commit fails, carefully read error messages and fix manually
 - Re-add files after hooks modify them
 
 **DON'T:**
+
 - Panic when pre-commit hooks fail
 - Look for ways to disable pre-commit hooks
 - Skip reading error messages when commits fail repeatedly
 
----
+______________________________________________________________________
 
 ## Command Reference
 
 ### Essential Commands
 
-| Command | Purpose |
-|---------|---------|
-| `git init` | Create a new repository |
-| `git clone <url>` | Download a repository from GitHub |
-| `git status` | Check repository state |
-| `git add <file>` | Stage files for commit |
-| `git commit -m "msg"` | Create a commit |
-| `git commit -am "msg"` | Stage and commit modified files |
-| `git log` | View commit history |
-| `git branch` | List branches / see current branch |
-| `git branch <name>` | Create a new branch |
-| `git checkout <branch>` | Switch branches |
-| `git checkout -b <name>` | Create and switch to new branch |
-| `git merge <branch>` | Merge branch into current branch |
-| `git pull` | Download changes from remote |
-| `git push` | Upload changes to remote |
-| `git revert <commit>` | Undo a commit (safely) |
+| Command                  | Purpose                            |
+| ------------------------ | ---------------------------------- |
+| `git init`               | Create a new repository            |
+| `git clone <url>`        | Download a repository from GitHub  |
+| `git status`             | Check repository state             |
+| `git add <file>`         | Stage files for commit             |
+| `git commit -m "msg"`    | Create a commit                    |
+| `git commit -am "msg"`   | Stage and commit modified files    |
+| `git log`                | View commit history                |
+| `git branch`             | List branches / see current branch |
+| `git branch <name>`      | Create a new branch                |
+| `git checkout <branch>`  | Switch branches                    |
+| `git checkout -b <name>` | Create and switch to new branch    |
+| `git merge <branch>`     | Merge branch into current branch   |
+| `git pull`               | Download changes from remote       |
+| `git push`               | Upload changes to remote           |
+| `git revert <commit>`    | Undo a commit (safely)             |
 
 ### Commands to Use Carefully
 
-| Command | Purpose | Warning |
-|---------|---------|---------|
-| `git reset --hard` | Discard all uncommitted changes | Destructive |
-| `git reset --hard <commit>` | Delete commits after specified commit | Destructive |
-| `git push --force` | Overwrite remote history | Very destructive |
+| Command                     | Purpose                               | Warning          |
+| --------------------------- | ------------------------------------- | ---------------- |
+| `git reset --hard`          | Discard all uncommitted changes       | Destructive      |
+| `git reset --hard <commit>` | Delete commits after specified commit | Destructive      |
+| `git push --force`          | Overwrite remote history              | Very destructive |
 
----
+______________________________________________________________________
 
 # Python Installation and Execution
 
@@ -501,7 +529,7 @@ provides isolated, reproducible environments for each project.
 - Do not forget to prefix commands with `pixi run`
 - Do not manually edit `pixi.lock` - it is automatically managed
 
----
+______________________________________________________________________
 
 ## Python Package Structure
 
@@ -518,7 +546,8 @@ provides isolated, reproducible environments for each project.
   ```
 - Include `__init__.py` files in all package directories
 - Use `pip install -e .` (editable install) during development
-- Use `if __name__ == "__main__":` guard for code that should only run when executed directly
+- Use `if __name__ == "__main__":` guard for code that should only run when executed
+  directly
 
 ### DON'T
 
@@ -526,7 +555,7 @@ provides isolated, reproducible environments for each project.
 - Do not forget the `__init__.py` files in package directories
 - Do not use regular `pip install .` during development (changes require reinstallation)
 
----
+______________________________________________________________________
 
 ## Executing Python Code
 
@@ -552,21 +581,21 @@ pixi run python ../script.py
 - Do not run `python script.py` without `pixi run` prefix
 - Do not assume the system Python is the correct one
 
----
+______________________________________________________________________
 
 ## Quick Reference Commands
 
-| Task | Command |
-|------|---------|
-| Add conda package | `pixi add <package>` |
-| Add PyPI package | `pixi add --pypi <package>` |
-| Run Python script | `pixi run python script.py` |
-| Run tests | `pixi run pytest` |
-| Run tasks | `pixi run pytask` |
-| List installed packages | `pixi list` |
-| Initialize new project | `pixi init --format pyproject` |
+| Task                    | Command                        |
+| ----------------------- | ------------------------------ |
+| Add conda package       | `pixi add <package>`           |
+| Add PyPI package        | `pixi add --pypi <package>`    |
+| Run Python script       | `pixi run python script.py`    |
+| Run tests               | `pixi run pytest`              |
+| Run tasks               | `pixi run pytask`              |
+| List installed packages | `pixi list`                    |
+| Initialize new project  | `pixi init --format pyproject` |
 
----
+______________________________________________________________________
 
 # Python Basics
 
@@ -590,11 +619,12 @@ pixi run python ../script.py
 
   # Better - use approximate comparison
   import math
+
   if math.isclose(0.1 + 0.2, 0.3):
       ...
   ```
 
----
+______________________________________________________________________
 
 ## Strings
 
@@ -618,7 +648,7 @@ pixi run python ../script.py
   "123" * 2  # Returns '123123'
   ```
 
----
+______________________________________________________________________
 
 ## Lists, Tuples, and Sets
 
@@ -645,15 +675,15 @@ pixi run python ../script.py
 
 ### Choosing the Right Container
 
-| Use Case | Container |
-|----------|-----------|
-| Need to modify elements | list |
-| Need immutability/hashability | tuple |
-| Need fast membership checks | set |
-| Need unique elements | set |
+| Use Case                         | Container     |
+| -------------------------------- | ------------- |
+| Need to modify elements          | list          |
+| Need immutability/hashability    | tuple         |
+| Need fast membership checks      | set           |
+| Need unique elements             | set           |
 | Need to preserve insertion order | list or tuple |
 
----
+______________________________________________________________________
 
 ## Dictionaries
 
@@ -682,7 +712,7 @@ alice_age = students["Alice"]["age"]
 - Don't use generic variable names like `dictionary` or `dict1`
 - Don't forget that modifying a nested dict modifies the original
 
----
+______________________________________________________________________
 
 ## For Loops
 
@@ -710,7 +740,7 @@ for name, score in scores.items():
 - Don't avoid loops just because "loops are slow" - premature optimization is bad
 - Don't use loops when a simple built-in function exists (`sum()`, `len()`, etc.)
 
----
+______________________________________________________________________
 
 ## Functions
 
@@ -727,6 +757,7 @@ def utility_crra(consumption, gamma=1.5):
     """Calculate CRRA utility."""
     return consumption ** (1 - gamma) / (1 - gamma)
 
+
 # Good - using keyword arguments
 result = utility_crra(consumption=1.0, gamma=2.0)
 ```
@@ -741,6 +772,7 @@ result = utility_crra(consumption=1.0, gamma=2.0)
       some_list.append(4)
       return some_list
 
+
   # Good - create a copy first
   def append_4(some_list):
       result = some_list.copy()
@@ -748,7 +780,7 @@ result = utility_crra(consumption=1.0, gamma=2.0)
       return result
   ```
 
----
+______________________________________________________________________
 
 ## Importing
 
@@ -775,7 +807,7 @@ import pandas as pd
   from numpy import *
   ```
 
----
+______________________________________________________________________
 
 ## File Paths with pathlib
 
@@ -812,10 +844,10 @@ print(data_path.exists())
 ### Three Rules for File Paths
 
 1. Always use `pathlib.Path` objects instead of strings
-2. Do not hardcode any parts of a path outside of the project's directory
-3. Always concatenate paths with `/`
+1. Do not hardcode any parts of a path outside of the project's directory
+1. Always concatenate paths with `/`
 
----
+______________________________________________________________________
 
 ## Tracebacks and Error Handling
 
@@ -824,21 +856,21 @@ print(data_path.exists())
 - Read tracebacks from bottom to top
 - Look for three key pieces of information:
   1. What type of exception occurred
-  2. Where it occurred (file and line number)
-  3. What exactly happened (error message)
+  1. Where it occurred (file and line number)
+  1. What exactly happened (error message)
 - Create minimal reproducible examples when asking for help
 
 ### Common Exception Types
 
-| Exception | Cause |
-|-----------|-------|
-| `ValueError` | Invalid value passed to function |
-| `KeyError` | Missing dictionary key or typo |
-| `TypeError` | Wrong type (e.g., unhashable key) |
-| `ImportError` | Typo in import or missing module |
-| `NameError` | Variable not defined |
+| Exception     | Cause                             |
+| ------------- | --------------------------------- |
+| `ValueError`  | Invalid value passed to function  |
+| `KeyError`    | Missing dictionary key or typo    |
+| `TypeError`   | Wrong type (e.g., unhashable key) |
+| `ImportError` | Typo in import or missing module  |
+| `NameError`   | Variable not defined              |
 
----
+______________________________________________________________________
 
 # Debugging
 
@@ -848,26 +880,30 @@ Debugging is a learnable skill that accounts for 25-50% of programming time. The
 two complementary modes:
 
 1. **Inspeculation** - A hybrid of inspection, simulation, and speculation
-2. **Data Gathering** - Collecting information about program state
+1. **Data Gathering** - Collecting information about program state
 
----
+______________________________________________________________________
 
 ## Bug Prevention
 
-Prevention is better than cure. The best debugging is the debugging you never have to do.
+Prevention is better than cure. The best debugging is the debugging you never have to
+do.
 
 ### DO: Write Preventive Code
 
 - **Write comprehensive unit tests**
+
   - Test all code paths, not just the happy path
   - Cover edge cases explicitly
   - One test per function is usually NOT enough
 
 - **Implement thorough error handling**
+
   - Validate inputs at function boundaries
   - Write clear, informative error messages
 
 - **Write readable, modular code**
+
   - Give functions a clear, single purpose
   - Use informative variable names
   - Keep functions small enough to understand at a glance
@@ -879,74 +915,87 @@ Prevention is better than cure. The best debugging is the debugging you never ha
 - Don't use cryptic variable names like `x`, `temp`, or `data`
 - Don't write functions that do multiple unrelated things
 
----
+______________________________________________________________________
 
 ## Psychology of Debugging
 
 ### DON'T: Give in to Counterproductive Urges
 
 1. **The urge to skip reading**
+
    - Tracebacks contain valuable information
    - Always identify: the line, the error type, and the message
 
-2. **The urge to just run it again**
+1. **The urge to just run it again**
+
    - Computers are deterministic
    - The same code produces the same result
 
-3. **The urge to tell yourself it should work**
+1. **The urge to tell yourself it should work**
+
    - If you are debugging, something clearly did not work
    - Accept reality and investigate
 
-4. **The urge to try random things**
+1. **The urge to try random things**
+
    - Random changes rarely fix bugs
    - Changes without reason make things worse
 
-5. **The urge to blame libraries**
+1. **The urge to blame libraries**
+
    - Most libraries are well-tested
    - Bugs in your code are far more likely
 
----
+______________________________________________________________________
 
 ## Debugging Strategies (Agans' Rules)
 
 ### Rule 0: Get It Right the First Time
+
 - Invest in unit testing
 - Implement proper error handling
 - Write readable, modular code
 
 ### Rule 1: What Is It Supposed to Do?
+
 - Define exactly what is going wrong
 - Know how you determined something is wrong
 
 ### Rule 2: Is It Plugged In?
+
 - Verify you're running the code you think you're running
 - Check test data is correct
 - Confirm configuration is as expected
 
 ### Rule 3: Make It Fail
+
 - Find a test case that reproduces the failure
 - Simplify the test case as much as possible
 
 ### Rule 4: Divide and Conquer
+
 - Narrow the gap between cause and effect
 - Start with the simplest failing test case
 - Step through with a debugger
 
 ### Rule 5: Change One Thing at a Time, for a Reason
+
 - Make a git commit BEFORE starting to debug
 - Have a hypothesis before making any change
 - Re-run all tests after every change
 - Undo changes that were not helpful
 
 ### Rule 6: Write It Down
+
 - Keep records of what you tried
 - Document parameter combinations tested
 
 ### Rule 7: Be Humble
+
 - Ask for help after 15 minutes of being stuck
 - Explain the problem aloud (rubber duck debugging)
 
----
+______________________________________________________________________
 
 ## Data Gathering Techniques
 
@@ -968,7 +1017,7 @@ Prevention is better than cure. The best debugging is the debugging you never ha
 - They produce either too much output or risk missing important information
 - They cannot be adjusted interactively
 
----
+______________________________________________________________________
 
 # Software Engineering
 
@@ -998,13 +1047,14 @@ Good naming is one of the defining differences between good and bad programmers.
 - Start function names with `return_` or `call_`
 - Use `and` in function names (split into two functions instead)
 
----
+______________________________________________________________________
 
 ## Pure Functions
 
 Write pure functions whenever possible. A pure function:
+
 1. Returns identical values for identical arguments
-2. Has no side effects (does not modify external state)
+1. Has no side effects (does not modify external state)
 
 ### DO
 
@@ -1027,9 +1077,9 @@ def task_clean_data(
     data=SRC / "original_data" / "data.csv",
     produces=BLD / "data.pkl",
 ):
-    df = pd.read_csv(data)        # Impure: file read
-    clean = clean_data(df)         # Pure: data processing
-    clean.to_pickle(produces)      # Impure: file write
+    df = pd.read_csv(data)  # Impure: file read
+    clean = clean_data(df)  # Pure: data processing
+    clean.to_pickle(produces)  # Impure: file write
 
 
 def clean_data(df):
@@ -1038,7 +1088,7 @@ def clean_data(df):
     return cleaned_df
 ```
 
----
+______________________________________________________________________
 
 ## Error Handling
 
@@ -1073,7 +1123,7 @@ def _fail_if_lod_is_not_a_list(lod):
         raise TypeError(msg)
 ```
 
----
+______________________________________________________________________
 
 ## Testing
 
@@ -1113,17 +1163,17 @@ def test_clean_agreement_scale_invalid_data(invalid_input):
         _clean_agreement_scale(pd.Series([invalid_input]))
 ```
 
----
+______________________________________________________________________
 
 ## Data Structures: Choosing Containers
 
 ### When to Use Each
 
-| Structure | Use When |
-|-----------|----------|
-| `dict` | Free/variable fields, fast lookup by key, unknown keys at design time |
-| `NamedTuple` | Fixed fields, immutability required, simple data containers |
-| `dataclass` | Fixed fields, mutability needed, complex options required |
+| Structure    | Use When                                                              |
+| ------------ | --------------------------------------------------------------------- |
+| `dict`       | Free/variable fields, fast lookup by key, unknown keys at design time |
+| `NamedTuple` | Fixed fields, immutability required, simple data containers           |
+| `dataclass`  | Fixed fields, mutability needed, complex options required             |
 
 ### Immutability
 
@@ -1133,7 +1183,7 @@ def test_clean_agreement_scale_invalid_data(invalid_input):
 - Prefer NamedTuple (immutable) over dataclass (mutable by default)
 - Use `@dataclass(frozen=True)` if you need dataclass features but want immutability
 
----
+______________________________________________________________________
 
 # Pandas
 
@@ -1149,34 +1199,34 @@ pd.options.future.infer_string = True
 ```
 
 **DO:**
+
 - Use pandas version 2.1 or higher
 - Use pyarrow version 13.0 or higher
 - Use `engine="pyarrow"` when loading CSV files for better dtypes
 
 **DON'T:**
+
 - Use the deprecated `inplace` argument
 - Rely on implicit copies of DataFrames
 
----
+______________________________________________________________________
 
 ## DataFrames and Series
 
 ### Creating DataFrames
 
 **DO:**
+
 - Create small DataFrames for debugging and testing:
   ```python
-  df = pd.DataFrame(
-      data=[[1, "bla"], [3, "blubb"]],
-      columns=["a", "b"],
-      index=["c", "d"]
-  )
+  df = pd.DataFrame(data=[[1, "bla"], [3, "blubb"]], columns=["a", "b"], index=["c", "d"])
   ```
 - Use tiny inputs to recreate and solve problems before applying to real data
 
 ### Index Alignment
 
 **DO:**
+
 - Understand that assignment is index-aligned:
   ```python
   sr = pd.Series([2.71, 3.14], index=["d", "c"])
@@ -1185,16 +1235,18 @@ pd.options.future.infer_string = True
 - Use meaningful indices (not just RangeIndex) for safer operations
 
 **DON'T:**
+
 - Use float values in indices
 - Have duplicate values in indices when possible
 
----
+______________________________________________________________________
 
 ## Data Types
 
 ### Type Selection
 
 **DO:**
+
 - Set optimal dtypes explicitly:
   ```python
   better_dtypes = {
@@ -1209,35 +1261,39 @@ pd.options.future.infer_string = True
 - Use `pd.StringDtype()` for actual text data
 
 **DON'T:**
+
 - Accept default dtypes without consideration
 - Use strings when categoricals are more appropriate
 
----
+______________________________________________________________________
 
 ## Loading and Saving Data
 
 ### File Formats
 
 **DO:**
+
 - Use `.pkl` (pickle) for intermediate files not shared with others
 - Use `.arrow` (Apache Arrow) for files to share
 - Use `engine="pyarrow"` when reading CSV files
 
 **DON'T:**
+
 - Use `.dta` unless sharing with Stata users
 
----
+______________________________________________________________________
 
 ## Selection
 
 ### Row Selection
 
 **DO:**
+
 - Use `.loc` for label-based selection:
   ```python
-  df.loc[1]                    # Single row
-  df.loc["Cuba"]               # By label
-  df.loc[("Cuba", 2002)]       # MultiIndex
+  df.loc[1]  # Single row
+  df.loc["Cuba"]  # By label
+  df.loc[("Cuba", 2002)]  # MultiIndex
   ```
 - Use Boolean Series for filtering:
   ```python
@@ -1249,15 +1305,17 @@ pd.options.future.infer_string = True
   ```
 
 **DON'T:**
+
 - Use `.iloc` (position-based) unless absolutely necessary
 
----
+______________________________________________________________________
 
 ## Creating Variables
 
 ### Vectorized Operations
 
 **DO:**
+
 - Use numpy functions for math operations:
   ```python
   df["log_life_exp"] = np.log(df["life_exp"])
@@ -1270,6 +1328,7 @@ pd.options.future.infer_string = True
 ### Looping Guidelines
 
 **DO: Loop over columns**
+
 ```python
 clean = pd.DataFrame()
 for var in varlist:
@@ -1277,17 +1336,19 @@ for var in varlist:
 ```
 
 **DON'T: Loop over rows**
+
 - Avoid `df.iterrows()`, `df.apply()` row-wise, list comprehensions over rows
 - These are just Python loops in disguise and are slow
 - Use vectorized operations instead
 
----
+______________________________________________________________________
 
 ## Merging Datasets
 
 ### Merging
 
 **DO:**
+
 - Always specify merge keys explicitly:
   ```python
   pd.merge(left, right, on=["country", "year"])
@@ -1300,22 +1361,24 @@ for var in varlist:
 - Verify expected number of observations
 
 **DON'T:**
+
 - Leave merge arguments at defaults without consideration
 - Assume inner join (default) is what you want
 
----
+______________________________________________________________________
 
 ## Functional Data Cleaning
 
 ### The Three Rules
 
 1. **Start with an empty DataFrame**
-2. **Touch every variable just once**
-3. **Touch with a pure function**
+1. **Touch every variable just once**
+1. **Touch with a pure function**
 
 ### Implementation Pattern
 
 **DO:**
+
 ```python
 def clean_data(raw):
     df = pd.DataFrame(index=raw.index)
@@ -1339,7 +1402,7 @@ def clean_agreement_scale(sr):
 - Code cannot be executed in wrong order
 - Functions are reusable and testable
 
----
+______________________________________________________________________
 
 # Scientific Computing
 
@@ -1362,7 +1425,7 @@ def clean_agreement_scale(sr):
 - Don't assume arrays can have mixed types like Python lists
 - Don't write pure Python loops over array elements for performance-critical code
 
----
+______________________________________________________________________
 
 ## Creating Arrays
 
@@ -1374,14 +1437,14 @@ arr = np.array([1, 2, 3, 4])
 arr_2d = np.array([[1, 2], [3, 4]])
 
 # Constructors
-np.ones(3)                    # [1., 1., 1.]
-np.zeros((3, 4))              # 3x4 matrix of zeros
-np.arange(5)                  # [0, 1, 2, 3, 4]
-np.linspace(0, 1, 5)          # 5 evenly spaced values from 0 to 1
-np.eye(3)                     # 3x3 identity matrix
+np.ones(3)  # [1., 1., 1.]
+np.zeros((3, 4))  # 3x4 matrix of zeros
+np.arange(5)  # [0, 1, 2, 3, 4]
+np.linspace(0, 1, 5)  # 5 evenly spaced values from 0 to 1
+np.eye(3)  # 3x3 identity matrix
 ```
 
----
+______________________________________________________________________
 
 ## Calculations on Arrays
 
@@ -1400,16 +1463,16 @@ Vectorization means operating on entire arrays at once instead of looping over e
 - Don't use Python loops or list comprehensions for numerical operations
 - Don't forget that NumPy functions typically apply elementwise
 
----
+______________________________________________________________________
 
 ## Calculations Between Arrays
 
 ### Multiplication Types
 
 ```python
-a * b         # Elementwise multiplication
-a @ b         # Matrix multiplication
-a.dot(b)      # Matrix multiplication (alternative syntax)
+a * b  # Elementwise multiplication
+a @ b  # Matrix multiplication
+a.dot(b)  # Matrix multiplication (alternative syntax)
 ```
 
 ### DO
@@ -1422,7 +1485,7 @@ a.dot(b)      # Matrix multiplication (alternative syntax)
 
 - Don't confuse `*` (elementwise) with `@` (matrix multiplication)
 
----
+______________________________________________________________________
 
 ## Broadcasting
 
@@ -1437,13 +1500,13 @@ Broadcasting allows operations between arrays of different shapes.
 a = np.zeros((2, 3), dtype=np.int64)
 
 # Scalar broadcasting
-a + 1                           # Add 1 to every element
+a + 1  # Add 1 to every element
 
 # Row-wise broadcasting
-a + np.array([1, 2, 3])         # Shape (3,) broadcasts to (2, 3)
+a + np.array([1, 2, 3])  # Shape (3,) broadcasts to (2, 3)
 
 # Column-wise broadcasting
-a + np.array([[4], [5]])        # Shape (2, 1) broadcasts to (2, 3)
+a + np.array([[4], [5]])  # Shape (2, 1) broadcasts to (2, 3)
 ```
 
 ### DO
@@ -1451,7 +1514,7 @@ a + np.array([[4], [5]])        # Shape (2, 1) broadcasts to (2, 3)
 - Use broadcasting instead of repeating arrays - it saves memory and is faster
 - Prefer broadcasting over explicit `np.repeat` or `np.tile`
 
----
+______________________________________________________________________
 
 ## Random Number Generation
 
@@ -1462,9 +1525,9 @@ a + np.array([[4], [5]])        # Shape (2, 1) broadcasts to (2, 3)
 rng = np.random.default_rng(5471)
 
 # Generate random numbers
-rng.uniform(low=0, high=1, size=3)      # Uniform distribution
-rng.normal(loc=0, scale=1, size=(2, 3)) # Normal distribution
-rng.integers(0, 10, size=5)              # Random integers
+rng.uniform(low=0, high=1, size=3)  # Uniform distribution
+rng.normal(loc=0, scale=1, size=(2, 3))  # Normal distribution
+rng.integers(0, 10, size=5)  # Random integers
 ```
 
 ### DO
@@ -1480,17 +1543,17 @@ rng.integers(0, 10, size=5)              # Random integers
 - **Never use `np.random.default_rng()` without a seed** - results won't be reproducible
 - Don't use `np.random.rand()`, `np.random.randn()`, etc. (legacy API)
 
----
+______________________________________________________________________
 
 ## Performance Optimization
 
 ### The Optimization Process
 
 1. **Get it to run** - Make sure code works correctly
-2. **Get it right** - Add tests to verify correctness
-3. **Find the bottleneck** - Use profiling (snakeviz, line_profiler)
-4. **Speed up the bottleneck on one core** - Vectorization, better algorithms
-5. **Consider parallelization** - Only after single-core optimization
+1. **Get it right** - Add tests to verify correctness
+1. **Find the bottleneck** - Use profiling (snakeviz, line_profiler)
+1. **Speed up the bottleneck on one core** - Vectorization, better algorithms
+1. **Consider parallelization** - Only after single-core optimization
 
 ### DO
 
@@ -1511,12 +1574,13 @@ def slow_function(factors, weights, a):
         out[i] = a * np.prod(factors[i] ** weights)
     return out
 
+
 # GOOD - Fully vectorized
 def fast_function(factors, weights, a):
-    return a * np.prod(factors ** weights, axis=-1)
+    return a * np.prod(factors**weights, axis=-1)
 ```
 
----
+______________________________________________________________________
 
 ## Using Numba
 
@@ -1524,6 +1588,7 @@ Numba is a just-in-time compiler that can make Python loops as fast as C/Julia.
 
 ```python
 from numba import njit
+
 
 @njit
 def numba_function(factors, weights, a):
@@ -1547,7 +1612,7 @@ def numba_function(factors, weights, a):
 - Don't use dicts, lists, or complex objects inside Numba functions
 - Don't expect Numba to magically speed up already-vectorized NumPy code
 
----
+______________________________________________________________________
 
 # Numerical Optimization
 
@@ -1562,8 +1627,10 @@ Always use optimagic for numerical optimization in this codebase.
 import numpy as np
 import optimagic as om
 
+
 def sphere(x):
-    return (x ** 2).sum()
+    return (x**2).sum()
+
 
 start_params = np.ones(5)
 
@@ -1578,7 +1645,8 @@ res = om.minimize(
 
 - **DO** use `om.minimize()` for minimization and `om.maximize()` for maximization
 - **DO** explicitly specify the algorithm - there is no default optimizer
-- **DO** use structured parameter formats (dicts, nested structures) for complex problems
+- **DO** use structured parameter formats (dicts, nested structures) for complex
+  problems
 - **DO** inspect the result object attributes: `res.params`, `res.criterion`,
   `res.n_criterion_evaluations`, `res.success`, `res.message`
 
@@ -1587,25 +1655,25 @@ res = om.minimize(
 - **DON'T** rely on a default optimizer - always specify one explicitly
 - **DON'T** assume the optimization succeeded without checking `res.success`
 
----
+______________________________________________________________________
 
 ## Algorithm Selection
 
 ### Three-Step Process
 
 1. **Theory**: Use problem properties to select candidate algorithms
-2. **Experimentation**: Compare algorithms using criterion plots
-3. **Refine**: Iterate until convergence is achieved
+1. **Experimentation**: Compare algorithms using criterion plots
+1. **Refine**: Iterate until convergence is achieved
 
 ### Algorithm Quick Selection
 
-| Situation | First Choice |
-|-----------|--------------|
-| Smooth, no constraints | `scipy_lbfgsb` |
-| Smooth, with constraints | `ipopt` |
-| Least-squares, smooth | `scipy_ls_lm` |
-| Not smooth, few params | `nlopt_bobyqa` |
-| Global search, few params | `scipy_brute` |
+| Situation                  | First Choice                    |
+| -------------------------- | ------------------------------- |
+| Smooth, no constraints     | `scipy_lbfgsb`                  |
+| Smooth, with constraints   | `ipopt`                         |
+| Least-squares, smooth      | `scipy_ls_lm`                   |
+| Not smooth, few params     | `nlopt_bobyqa`                  |
+| Global search, few params  | `scipy_brute`                   |
 | Global search, many params | Multistart with local optimizer |
 
 ### DO
@@ -1621,7 +1689,7 @@ res = om.minimize(
 - **DON'T** expect global optimizers to be precise - always refine locally
 - **DON'T** use Nelder-Mead by default - it is widely used but rarely optimal
 
----
+______________________________________________________________________
 
 ## Debugging and Diagnostics
 
@@ -1652,7 +1720,7 @@ om.criterion_plot(results, max_evaluations=200)
 - **DON'T** assume an optimization succeeded without visual inspection
 - **DON'T** assume you found the global optimum just because an optimizer converged
 
----
+______________________________________________________________________
 
 # Projects
 
@@ -1675,7 +1743,7 @@ om.criterion_plot(results, max_evaluations=200)
 - Use manual clicking, copy-pasting, or commenting out code
 - Require running multiple files in a specific order manually
 
----
+______________________________________________________________________
 
 ## Directory Structure
 
@@ -1707,7 +1775,7 @@ my_project/
 └── pyproject.toml
 ```
 
----
+______________________________________________________________________
 
 ## Path Handling
 
@@ -1731,7 +1799,7 @@ BLD = SRC.joinpath("..", "..", "bld").resolve()
 - Use hardcoded absolute paths
 - Use string paths instead of `pathlib.Path` objects
 
----
+______________________________________________________________________
 
 ## Writing Pytask Tasks
 
@@ -1768,7 +1836,7 @@ def _clean_data(raw):
 - Use function names that do not start with `task_`
 - Use string paths instead of `pathlib.Path` objects
 
----
+______________________________________________________________________
 
 # Texts
 
@@ -1793,7 +1861,7 @@ def _clean_data(raw):
 - Don't use hashtags for comments (they create headings in Markdown)
 - Don't skip heading levels
 
----
+______________________________________________________________________
 
 ## Code Snippets
 
@@ -1816,7 +1884,7 @@ def cobb_douglas(labor, capital, alpha):
 - Don't paste unformatted code in communications
 - Don't omit the language identifier in code blocks
 
----
+______________________________________________________________________
 
 ## Writing README Files
 
@@ -1825,14 +1893,17 @@ def cobb_douglas(labor, capital, alpha):
 Every README should address:
 
 1. **Entry point to the project**
+
    - What is the goal?
    - How is that being achieved?
 
-2. **How to get it running**
+1. **How to get it running**
+
    - For experienced users: Bare minimum requirements and precise commands
    - For less experienced users: Links to background information
 
-3. **Basic purpose of the project**
+1. **Basic purpose of the project**
+
    - What problem does it solve?
    - Why would someone use it?
 
@@ -1848,7 +1919,7 @@ Every README should address:
 - Don't make READMEs excessively long
 - Don't include detailed API documentation in the README (link to it instead)
 
----
+______________________________________________________________________
 
 # Plotting
 
@@ -1868,44 +1939,51 @@ pio.templates.default = "plotly_dark"
 pd.options.plotting.backend = "plotly"
 ```
 
----
+______________________________________________________________________
 
 ## Two Types of Plots
 
 1. **Exploratory plots** - For discovering patterns in data
+
    - Speed is essential
    - Use `plotly.express` or pandas backend
 
-2. **Publication plots** - For communicating results
+1. **Publication plots** - For communicating results
+
    - Must be self-explanatory
    - May need `plotly.graph_objects` for fine control
 
----
+______________________________________________________________________
 
 ## Five Core Visualization Guidelines
 
 Based on Schwabish's principles:
 
 ### 1. Show the Data
+
 - DO: Let the data be visible and interpretable
 - DON'T: Obscure data with excessive decoration
 
 ### 2. Reduce the Clutter
+
 - DO: Remove unnecessary gridlines, borders, and decorations
 
 ### 3. Integrate Graphics and Text
+
 - DO: Label data directly on the plot when possible
 - DO: Write titles like newspaper headlines (convey the insight)
 
 ### 4. Avoid the Spaghetti Chart
+
 - DO: Use facets to separate groups (`facet_col`, `facet_row`)
 - DON'T: Plot many overlapping lines without differentiation
 
 ### 5. Start with Grey
+
 - DO: Use grey as the default color for most elements
 - DO: Use accent colors only for the most important data points
 
----
+______________________________________________________________________
 
 ## plotly.express Quick Reference
 
@@ -1932,7 +2010,7 @@ fig = px.line(
 fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 ```
 
----
+______________________________________________________________________
 
 ## DO's and DON'Ts Summary
 
@@ -1952,19 +2030,21 @@ fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 - Rely on legends when direct labels would be clearer
 - Create plots that require external explanation to understand
 
----
+______________________________________________________________________
 
 # Machine Learning and Econometrics
 
 ## Fundamental Differences: ML vs Econometrics
 
 ### Econometrics
+
 - Goal: Estimate **fundamentally unobservable** parameters and test hypotheses
 - Cannot directly test how well estimation worked
 - Focus on justifying assumptions (identification, exogeneity, etc.)
 - Parameters have causal/structural interpretations
 
 ### Machine Learning (Supervised)
+
 - Goal: Predict observable outcomes
 - Can directly measure prediction quality on held-out data
 - Focus on experimentation, evaluation, and finding what works
@@ -1982,7 +2062,7 @@ fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 - Do NOT use ML predictions as evidence of causal relationships
 - Do NOT skip holdout samples when the goal is prediction
 
----
+______________________________________________________________________
 
 ## Statsmodels Usage
 
@@ -2013,19 +2093,19 @@ results = model.fit(cov_type="HC1")
 - Do NOT forget that the intercept is implicit in OLS (included by default)
 - Do NOT confuse the model object with the results object
 
----
+______________________________________________________________________
 
 ## Scikit-learn Usage
 
 ### Basic Workflow Steps
 
 1. Arrange data into features matrix (X) and target vector (y)
-2. Split into training and test sets
-3. Choose and import an estimator class
-4. Instantiate with hyperparameters
-5. Fit the model using `.fit()`
-6. Generate predictions using `.predict()`
-7. Evaluate predictions
+1. Split into training and test sets
+1. Choose and import an estimator class
+1. Instantiate with hyperparameters
+1. Fit the model using `.fit()`
+1. Generate predictions using `.predict()`
+1. Evaluate predictions
 
 ### Train-Test Split
 
@@ -2052,7 +2132,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 - Do NOT evaluate on the same data used for training (leads to overfitting)
 - Do NOT leak test set information into training
 
----
+______________________________________________________________________
 
 ## Cross-Validation and Hyperparameter Tuning
 
