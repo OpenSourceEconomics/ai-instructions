@@ -1,6 +1,6 @@
 # AI Coding Standards
 
-Guidelines for AI agents, derived from
+Guidelines for AI agents, mostly derived from
 [Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/).
 
 ______________________________________________________________________
@@ -9,11 +9,9 @@ ______________________________________________________________________
 
 ## Type Hints
 
-**Always use type hints in all function signatures.** This is mandatory for this
-codebase.
+**Always use type hints in all function signatures.** This is mandatory.
 
 ```python
-# REQUIRED pattern
 def calculate_utility(consumption: float, gamma: float = 1.5) -> float:
     return consumption ** (1 - gamma) / (1 - gamma)
 
@@ -25,9 +23,103 @@ def load_config(path: Path) -> dict[str, Any]: ...
 ```
 
 - Use `from __future__ import annotations` for forward references
-- Use `typing` module types: `Optional`, `Union`, `Callable`, `Any`
-- Use `collections.abc` for abstract types: `Sequence`, `Mapping`, `Iterable`
 - Prefer `X | None` over `Optional[X]` in Python 3.10+
+- Use `collections.abc` for abstract types: `Sequence`, `Mapping`, `Iterable`
+
+## Immutability
+
+**Prefer immutable data structures throughout.** This prevents bugs and enables safer
+concurrent code.
+
+### Frozen Dataclasses
+
+Use `@dataclass(frozen=True)` for all configuration and state objects:
+
+```python
+from dataclasses import dataclass, field
+from types import MappingProxyType
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    n_periods: int
+    n_states: int
+    discount_factor: float = 0.95
+
+    @property
+    def n_total(self) -> int:
+        return self.n_periods * self.n_states
+```
+
+### Immutable Collections
+
+- Use `tuple` instead of `list` for sequences
+- Use `MappingProxyType` instead of `dict`
+- Use `frozenset` instead of `set`
+
+```python
+from types import MappingProxyType
+
+
+@dataclass(frozen=True)
+class Labels:
+    factors: tuple[str, ...]  # Not list[str]
+    mappings: MappingProxyType[str, int]  # Not dict[str, int]
+
+
+# For read-only dict views
+def ensure_immutable[K, V](d: dict[K, V]) -> MappingProxyType[K, V]:
+    return MappingProxyType(d)
+```
+
+### Immutable Update Pattern
+
+Use `with_*` methods or `dataclasses.replace()` to create modified copies:
+
+```python
+from dataclasses import replace
+
+
+@dataclass(frozen=True)
+class Config:
+    alpha: float
+    beta: float
+
+    def with_alpha(self, alpha: float) -> Self:
+        return replace(self, alpha=alpha)
+
+
+# Usage
+new_config = config.with_alpha(0.5)
+```
+
+### NewType for Domain Safety
+
+Use `NewType` to distinguish semantically different values of the same type:
+
+```python
+from typing import NewType
+
+Period = NewType("Period", int)
+Age = NewType("Age", int)
+
+
+def get_state(period: Period, age: Age) -> State: ...
+```
+
+### Enums for Categorical Values
+
+Use `Enum` instead of string literals or boolean flags:
+
+```python
+from enum import Enum, auto
+
+
+class FactorType(Enum):
+    STATE = auto()
+    ENDOGENOUS = auto()
+    CONTROL = auto()
+```
 
 ## File Paths
 
@@ -36,12 +128,8 @@ def load_config(path: Path) -> dict[str, Any]: ...
 ```python
 from pathlib import Path
 
-# In .py files
 root = Path(__file__).parent.parent
 data_path = root / "datasets" / "data.csv"
-
-# In notebooks
-root = Path(".").resolve().parent
 ```
 
 Three rules:
@@ -50,26 +138,12 @@ Three rules:
 1. Never hardcode absolute paths outside the project directory
 1. Concatenate paths with `/` operator
 
-## Cross-Platform Compatibility
-
-- Use forward slashes `/` (works everywhere)
-- Use `pathlib.Path` for all path operations
-- Be consistent with file naming (Unix is case-sensitive, Windows is not)
-- Never hardcode paths like `C:\Users\...` or `/home/...`
-
 ## Floating Point Comparisons
 
 Never use `==` for floats. Use tolerance-based comparison:
 
 ```python
-import math
-
-if math.isclose(result, 0.3, rel_tol=1e-9):
-    ...
-
-# Or with NumPy
-import numpy as np
-
+# With NumPy/JAX
 if np.isclose(result, 0.3):
     ...
 ```
@@ -111,10 +185,6 @@ project/
 └── pyproject.toml
 ```
 
-- Include `__init__.py` in all package directories
-- Use `pip install -e .` for development
-- Never commit `__pycache__`
-
 ______________________________________________________________________
 
 # Code Quality
@@ -126,8 +196,8 @@ ______________________________________________________________________
 - `CamelCase` - classes
 - Function names start with verb: `create_`, `calculate_`, `convert_`, `get_`
 - Private functions: `_underscore` prefix
-- Avoid: abbreviations, misspellings, single letters (`n`, `c`, `s`, `u` conflict with
-  debugger), built-in names (`list`, `dict`, `type`)
+- Avoid: abbreviations, single letters (`n`, `c`, `s`, `u` conflict with debugger),
+  built-in names (`list`, `dict`, `type`)
 
 ## Pure Functions
 
@@ -138,16 +208,13 @@ Write pure functions whenever possible:
 
 ```python
 # Good: Separate I/O from logic
-def task_clean_data(
-    data: Path = SRC / "original_data" / "data.csv",
-    produces: Path = BLD / "data.pkl",
-) -> None:
-    df = pd.read_csv(data)  # I/O at boundary
-    clean = clean_data(df)  # Pure logic
-    clean.to_pickle(produces)  # I/O at boundary
+def task_example(path_in: Path, path_out: Path) -> None:
+    data = pd.read_csv(path_in)  # I/O at boundary
+    result = process_data(data)  # Pure logic
+    result.to_pickle(path_out)  # I/O at boundary
 
 
-def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+def process_data(df: pd.DataFrame) -> pd.DataFrame:
     """Pure function - all logic here."""
     ...
 ```
@@ -159,12 +226,6 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 - Use `_fail_if_...` helper functions for validation
 
 ```python
-def process_data(data: list[dict]) -> dict:
-    _fail_if_not_list(data)
-    _fail_if_wrong_element_types(data)
-    ...
-
-
 def _fail_if_not_list(data: Any) -> None:
     if not isinstance(data, list):
         msg = f"data must be a list, not {type(data).__name__}"
@@ -176,7 +237,6 @@ def _fail_if_not_list(data: Any) -> None:
 - Test files: `test_<module>.py`
 - Test functions: `test_<function>_<behavior>`
 - One assertion per test
-- Test edge cases and expected exceptions
 - Use `@pytest.mark.parametrize` for multiple inputs
 
 ```python
@@ -185,36 +245,6 @@ def test_clean_scale_raises_on_invalid(invalid_input: Any) -> None:
     with pytest.raises(ValueError):
         clean_scale(pd.Series([invalid_input]))
 ```
-
-## Immutability
-
-Prefer immutable structures:
-
-- `NamedTuple` over `dataclass` when possible
-- `@dataclass(frozen=True)` when dataclass features needed
-- Copy before modifying: `result = some_list.copy()`
-
-______________________________________________________________________
-
-# Git
-
-## Commits
-
-- Descriptive messages explaining "why" not "what"
-- Imperative mood: "Add feature" not "Added feature"
-- Stage specific files, not `git add .`
-
-## Pre-commit Hooks
-
-- Run `pre-commit install` after cloning
-- If commit fails, try again (hooks may auto-fix)
-- If second commit fails, read error and fix manually
-
-## Safety
-
-- Never use `--force` on shared branches
-- Never use `git reset --hard` without understanding consequences
-- Don't modify history after pushing
 
 ______________________________________________________________________
 
@@ -238,7 +268,6 @@ pd.options.future.infer_string = True
 - Use `.loc` for label-based selection, avoid `.iloc`
 - Use `.query()` for readable filtering
 - Never loop over rows (`iterrows`, row-wise `apply`)
-- Loop over columns is fine
 
 ## File Formats
 
@@ -248,6 +277,12 @@ pd.options.future.infer_string = True
 
 ## Functional Data Cleaning
 
+Always follow these rules:
+
+1. Start with empty DataFrame
+1. Touch each variable once
+1. Use pure functions for each transformation
+
 ```python
 def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame(index=raw.index)
@@ -256,17 +291,17 @@ def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
     return df
 ```
 
-Three rules:
+Do all data management in a collection of tables satisfying these rules (normal forms):
 
-1. Start with empty DataFrame
-1. Touch each variable once
-1. Use pure functions for each transformation
+- Values have no internal structure
+- Tables do not contain redundant information
+- Variable names have no structure (long format, NOT wide format)
 
 ## Merging
 
-- Always specify keys: `pd.merge(left, right, on=["key1", "key2"])`
+- At the very end, merge / reshaping tables as needed for analysis
+- Always specify keys: `pd.merge(left, right, on=["key1", "key2"])` or index
 - Explicitly choose join type: `how="left"`
-- Verify observation counts before and after
 
 ______________________________________________________________________
 
@@ -289,19 +324,81 @@ rng.uniform(0, 1, size=3)
 rng.normal(0, 1, size=(2, 3))
 ```
 
-**Never use:**
+**Never use:** `np.random.seed()`, `np.random.rand()`, `np.random.randn()`
 
-- `np.random.seed()` (deprecated global state)
-- `np.random.rand()`, `np.random.randn()` (legacy)
-- `np.random.default_rng()` without seed (not reproducible)
+______________________________________________________________________
 
-## Performance
+# JAX
 
-1. Get it working first
-1. Add tests
-1. Profile to find bottleneck
-1. Vectorize the bottleneck
-1. Consider Numba for loops that can't be vectorized
+**When a project uses JAX, prefer it over NumPy for performance-critical code.**
+
+## Core Patterns
+
+```python
+import jax.numpy as jnp
+from jax import jit, vmap
+
+
+# Use jnp instead of np
+def utility(consumption: Array, gamma: float) -> Array:
+    return jnp.where(
+        gamma == 1.0,
+        jnp.log(consumption),
+        consumption ** (1 - gamma) / (1 - gamma),
+    )
+
+
+# JIT compile hot paths
+@jit
+def solve_model(params: Array, states: Array) -> Array: ...
+
+
+# Vectorize with vmap instead of loops
+batched_fn = vmap(single_fn, in_axes=(0, None))
+```
+
+## Key Differences from NumPy
+
+- Use `jnp.where()` for conditionals (not Python `if`)
+- Arrays are immutable - operations return new arrays
+- Use `jax.random` with explicit keys (not global state)
+
+```python
+import jax.random as jr
+
+key = jr.key(42)
+key, subkey = jr.split(key)
+samples = jr.normal(subkey, shape=(100,))
+```
+
+## Type Hints with jaxtyping
+
+Use `jaxtyping` for shape-annotated array types:
+
+```python
+from jax import Array
+from jaxtyping import Float, Int
+
+
+def process(
+    states: Float[Array, "n_periods n_states"],
+    indices: Int[Array, "n_samples"],
+) -> Float[Array, "n_samples"]: ...
+```
+
+## Immutable Mappings in JAX
+
+Register `MappingProxyType` as a pytree for JIT compatibility:
+
+```python
+import jax
+
+jax.tree_util.register_pytree_node(
+    MappingProxyType,
+    lambda mp: (tuple(mp.values()), tuple(mp.keys())),
+    lambda keys, values: MappingProxyType(dict(zip(keys, values, strict=True))),
+)
+```
 
 ______________________________________________________________________
 
@@ -373,32 +470,73 @@ ______________________________________________________________________
 
 # Pytask
 
-## Task Structure
+Use modern pytask syntax with `Annotated` and `Product` markers.
+
+## Basic Task with Product Annotation
 
 ```python
 from pathlib import Path
-import pandas as pd
+from typing import Annotated
 
-BLD = Path(__file__).parent / "bld"
+import pandas as pd
+from pytask import Product
+
+from my_project.config import BLD, SRC
 
 
 def task_clean_data(
-    raw_file: Path = Path("data.arrow"),
-    produces: Path = BLD / "clean.pkl",
+    raw_file: Path = SRC / "original_data" / "data.arrow",
+    output_file: Annotated[Path, Product] = BLD / "clean_data.pkl",
 ) -> None:
     raw = pd.read_feather(raw_file)
     clean = _clean_data(raw)
-    clean.to_pickle(produces)
+    clean.to_pickle(output_file)
 
 
 def _clean_data(raw: pd.DataFrame) -> pd.DataFrame: ...
 ```
 
+## Return Annotation for Simple Outputs
+
+When the task's primary purpose is producing a single file:
+
+```python
+def task_create_summary() -> Annotated[str, Path("summary.txt")]:
+    return "Summary content here"
+```
+
+## Data Catalog Pattern
+
+For projects with many data files, use a `DataCatalog`:
+
+```python
+# src/my_project/config.py
+from pytask import DataCatalog
+
+DATA_CATALOG = DataCatalog()
+DATA_CATALOG["raw_data"] = SRC / "original_data" / "data.arrow"
+DATA_CATALOG["clean_data"] = BLD / "clean_data.pkl"
+DATA_CATALOG["results"] = BLD / "results.pkl"
+```
+
+```python
+# src/my_project/data_management/task_clean.py
+from my_project.config import DATA_CATALOG
+
+
+def task_clean_data(
+    raw_file: Path = DATA_CATALOG["raw_data"],
+    output_file: Annotated[Path, Product] = DATA_CATALOG["clean_data"],
+) -> None: ...
+```
+
+## Task Conventions
+
 - Task files: `task_*.py`
 - Task functions: `task_*`
-- Use `Path` objects for dependencies
-- Use `produces` keyword for outputs
-- Keep tasks focused: read → compute → write
+- Use `Annotated[Path, Product]` for outputs
+- Keep tasks focused: read → compute (via helper) → write
+- Helper functions do the actual work (testable, pure)
 
 ______________________________________________________________________
 
@@ -424,8 +562,9 @@ ______________________________________________________________________
 
 # ML vs Econometrics
 
-**Econometrics** (statsmodels): causal inference, hypothesis testing **ML**
-(scikit-learn): prediction
+**Econometrics** (statsmodels): causal inference, hypothesis testing
+
+**ML** (scikit-learn): prediction
 
 Critical rules:
 
