@@ -1038,12 +1038,15 @@ Good naming is one of the defining differences between good and bad programmers.
 
 ### DON'T
 
-- Use abbreviations, especially ambiguous ones
-- Use misspelled words
+- Use abbreviations, especially ambiguous ones (`constr` could mean constraint or
+  constructor)
+- Use misspelled words (`rsnbrck` instead of `rosenbrock`, `lambbda` instead of
+  `lambda_`)
 - Use meaningless distinctions (`Beta` and `beta` for different concepts)
 - Append type to variable names (`names_list` instead of just `names`)
 - Use built-in keywords as names: `list`, `var`, `dict`, `type`
 - Use single letters that cause debugger issues: `n`, `c`, `u`, `s`
+- Use hard-to-distinguish letters: `l` (lowercase L) and `I` (uppercase i)
 - Start function names with `return_` or `call_`
 - Use `and` in function names (split into two functions instead)
 
@@ -1182,6 +1185,228 @@ ______________________________________________________________________
 - Immutable objects prevent many bugs
 - Prefer NamedTuple (immutable) over dataclass (mutable by default)
 - Use `@dataclass(frozen=True)` if you need dataclass features but want immutability
+
+______________________________________________________________________
+
+## Type Hints
+
+Type hints make Python code safer, more maintainable, and self-documenting. They enable
+IDE autocomplete, catch bugs before runtime, and serve as always up-to-date
+documentation.
+
+### DO
+
+- Add type hints to all function parameters and return types
+- Use built-in types directly: `list[int]`, `dict[str, float]`, `tuple[int, str]`
+- Use `| None` for optional values: `str | None`
+- Use `|` for union types: `int | str`
+- Use `Path` from pathlib for file paths
+- Use `pd.DataFrame` for pandas DataFrames
+- Use the Python 3.12+ generic syntax: `def first[T](items: list[T]) -> T:`
+- Run a type checker (ty, pyright) regularly to catch errors
+
+### DON'T
+
+- Use old typing module imports (`Optional`, `Union`, `List`, `Dict`) - use modern
+  syntax
+- Leave function signatures untyped
+- Use `Any` except as a last resort for untyped external code
+- Use `list` without specifying element type (use `list[int]` not just `list`)
+
+### Basic Syntax
+
+```python
+from pathlib import Path
+
+import pandas as pd
+
+
+def load_data(path: Path) -> pd.DataFrame:
+    """Load data from a CSV file."""
+    return pd.read_csv(path)
+
+
+def calculate_mean(values: list[float]) -> float:
+    """Calculate the arithmetic mean."""
+    return sum(values) / len(values)
+
+
+def find_user(user_id: int) -> str | None:
+    """Return username or None if not found."""
+    return users.get(user_id)
+```
+
+### Type Aliases
+
+```python
+# Use the type statement for readable aliases
+type UserId = int
+type Coordinates = tuple[float, float]
+type Matrix = list[list[float]]
+
+
+def get_location(user_id: UserId) -> Coordinates: ...
+```
+
+### Generic Functions and Classes
+
+```python
+# Generic function - preserves input type
+def first[T](items: list[T]) -> T:
+    return items[0]
+
+
+# Generic class
+class Stack[T]:
+    def __init__(self) -> None:
+        self._items: list[T] = []
+
+    def push(self, item: T) -> None:
+        self._items.append(item)
+
+    def pop(self) -> T:
+        return self._items.pop()
+```
+
+### Dataclasses with Types
+
+```python
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """Immutable configuration for a model."""
+
+    n_periods: int
+    discount_factor: float = 0.95
+    grid_points: int = 100
+
+
+@dataclass
+class SimulationResult:
+    """Mutable result container."""
+
+    values: list[float] = field(default_factory=list)
+    converged: bool = False
+```
+
+### Callable Types
+
+```python
+from collections.abc import Callable
+
+
+def apply_operation(
+    a: int,
+    b: int,
+    op: Callable[[int, int], float],
+) -> float:
+    return op(a, b)
+```
+
+### Literal and NewType for Precision
+
+```python
+from typing import Literal, NewType
+
+
+# Literal constrains to specific values
+def set_mode(mode: Literal["read", "write", "append"]) -> None: ...
+
+
+# NewType creates distinct types from the same base
+UserId = NewType("UserId", int)
+OrderId = NewType("OrderId", int)
+
+
+def process_order(
+    user_id: UserId, order_id: OrderId
+) -> None: ...  # Type checker catches if you swap these
+```
+
+### Protocol for Duck Typing
+
+```python
+from typing import Protocol
+
+
+class Drawable(Protocol):
+    def draw(self) -> None: ...
+
+
+def render(item: Drawable) -> None:
+    item.draw()
+
+
+# Any class with draw() method works - no inheritance needed
+class Circle:
+    def draw(self) -> None:
+        print("Drawing circle")
+
+
+render(Circle())  # OK
+```
+
+### NumPy Array Types
+
+```python
+import numpy as np
+from numpy.typing import NDArray
+
+
+def simulate(
+    n_simulations: int,
+    seed: int | None = None,
+) -> NDArray[np.float64]:
+    rng = np.random.default_rng(seed)
+    return rng.random(n_simulations)
+```
+
+### Running Type Checkers
+
+```bash
+# ty (from Astral, recommended)
+pixi run ty check src/
+
+# pyright
+pixi run pyright src/
+
+# Strict mode for more checks
+pixi run ty check --strict src/
+```
+
+______________________________________________________________________
+
+## functools.partial
+
+Use `functools.partial` to create new functions with some arguments pre-filled.
+
+### DO
+
+- Use for plotting functions against one of their arguments
+- Use to create functions that only depend on a parameter vector (for optimization,
+  differentiation)
+- Keep it as a problem solver in your toolkit
+
+### DON'T
+
+- Overuse partial for every function call
+- Create many confusing versions of the same function
+
+### Example
+
+```python
+from functools import partial
+
+
+def objective(params, data, options): ...
+
+
+# Create a function that only depends on params for optimization
+objective_for_optimizer = partial(objective, data=my_data, options=my_options)
+result = minimize(objective_for_optimizer, initial_params)
+```
 
 ______________________________________________________________________
 
