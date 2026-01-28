@@ -39,5 +39,11 @@ extend-ignore = [
 ]
 select = [ "ALL" ]
 
+[tool.ruff.lint.per-file-ignores]
+"boilerplate/.claude/*" = [
+  "BLE001", # Blind exception (needed for robust JSON parsing)
+  "T201",   # Print (required for hook output)
+]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
