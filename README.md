@@ -1,13 +1,14 @@
 # AI Instructions
 
 Common coding standards and guidelines for AI coding agents, derived from the
-[Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/) course.
+[Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/)
+course.
 
 ## Purpose
 
-This repository provides a unified set of instructions for AI coding agents working across
-multiple projects. The goal is to ensure consistent code quality, style, and best practices
-regardless of which project an AI agent is assisting with.
+This repository provides a unified set of instructions for AI coding agents working
+across multiple projects. The goal is to ensure consistent code quality, style, and best
+practices regardless of which project an AI agent is assisting with.
 
 ## Usage
 
