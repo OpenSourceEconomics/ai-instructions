@@ -22,31 +22,15 @@ based on what the project actually contains.
 
 ## Key Conventions
 
-| Aspect               | Convention                                                  |
-| -------------------- | ----------------------------------------------------------- |
-| **Build backend**    | hatchling + hatch-vcs                                       |
-| **Docstring style**  | Google                                                      |
-| **Line length**      | 88                                                          |
-| **Linter/formatter** | ruff with `select = ["ALL"]`                                |
-| **Ordering**         | Alphabetical within blocks (not at outermost section level) |
-| **Package manager**  | pixi only (no venv/env)                                     |
-| **pytest markers**   | Only add when actually used                                 |
-| **Type checker**     | ty (not mypy)                                               |
-
-## pyproject.toml Section Order
-
-Sections should appear in this logical order (not alphabetical at the outermost level):
-
-1. `[project]` - Project metadata
-1. `[build-system]` - Build system configuration
-1. `[tool.hatch.*]` - Hatch build settings
-1. `[tool.pixi.*]` - Pixi environment/dependency management
-1. `[tool.ruff.*]` - Linting configuration
-1. `[tool.ty.*]` - Type checking configuration
-1. `[tool.pytest.*]` - Testing configuration
-1. `[tool.pytask.*]` - Task runner configuration
-1. `[tool.yamlfix]` - YAML formatting
-1. Other tools (mypy, etc.)
+| Aspect               | Convention                   |
+| -------------------- | ---------------------------- |
+| **Build backend**    | hatchling + hatch-vcs        |
+| **Docstring style**  | Google                       |
+| **Line length**      | 88                           |
+| **Linter/formatter** | ruff with `select = ["ALL"]` |
+| **Package manager**  | pixi only (no venv/env)      |
+| **pytest markers**   | Only add when actually used  |
+| **Type checker**     | ty (not mypy)                |
 
 ## Pixi Environment and Task Naming
 
@@ -73,59 +57,45 @@ ______________________________________________________________________
 ### Tier A/B: Full Configuration
 
 ```toml
-# ======================================================================================
-# Project metadata
-# ======================================================================================
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatch-vcs", "hatchling" ]
 
 [project]
-authors = [
-    { name = "Author Name", email = "email@example.com" },
-]
-classifiers = [
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-]
-dependencies = []
-description = "Short description"
-dynamic = ["version"]
-keywords = []
-license = { file = "LICENSE" }
-maintainers = [
-    { name = "Maintainer Name", email = "email@example.com" },
-]
 name = "project-name"
+description = "Short description"
 readme = { file = "README.md", content-type = "text/markdown" }
+keywords = [ ]
+license = { file = "LICENSE" }
+authors = [ { name = "Author Name", email = "email@example.com" } ]
+maintainers = [ { name = "Maintainer Name", email = "email@example.com" } ]
 requires-python = ">=3.11"
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3 :: Only",
+]
+dynamic = [ "version" ]
+dependencies = [ ]
 
 [project.urls]
 Github = "https://github.com/org/project-name"
 Repository = "https://github.com/org/project-name"
 Tracker = "https://github.com/org/project-name/issues"
 
-
-# ======================================================================================
-# Build system configuration
-# ======================================================================================
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling", "hatch-vcs"]
-
 [tool.hatch.build.hooks.vcs]
 version-file = "src/project_name/_version.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = ["tests"]
+exclude = [ "tests" ]
 only-packages = true
 
 [tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+only-include = [ "src" ]
+sources = [ "src" ]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -133,14 +103,9 @@ allow-direct-references = true
 [tool.hatch.version]
 source = "vcs"
 
-
-# ======================================================================================
-# Pixi configuration
-# ======================================================================================
-
 [tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 
 [tool.pixi.dependencies]
 jupyterlab = "*"
@@ -162,43 +127,28 @@ tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
 ty = "ty check"
 
-
-# ======================================================================================
-# Ruff configuration
-# ======================================================================================
-
 [tool.ruff]
 fix = true
 target-version = "py314"
 unsafe-fixes = false
 
-[tool.ruff.lint]
-extend-ignore = [
-  "COM812",   # Conflicts with ruff-format
-  "EM101",    # Exception must not use a string literal
-  "EM102",    # Exception must not use an f-string literal
-  "FIX002",   # Line contains TODO
-  "ISC001",   # Conflicts with ruff-format
-  "TC001",    # Move application import into a type-checking block
-  "TC002",    # Move third-party import into a type-checking block
-  "TC003",    # Move standard library import into a type-checking block
-  "TRY003",   # Long messages outside exception class
+lint.select = [ "ALL" ]
+lint.extend-ignore = [
+  "COM812", # Conflicts with ruff-format
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "FIX002", # Line contains TODO
+  "ISC001", # Conflicts with ruff-format
+  "TC001",  # Move application import into a type-checking block
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
 ]
-select = ["ALL"]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = [
-  "INP001",  # Implicit namespace packages
-  "S101",    # Use of assert
+lint.per-file-ignores."tests/*" = [
+  "INP001", # Implicit namespace packages
+  "S101",   # Use of assert
 ]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-
-# ======================================================================================
-# ty configuration
-# ======================================================================================
+lint.pydocstyle.convention = "google"
 
 [tool.ty.rules]
 ambiguous-protocol-member = "error"
@@ -219,29 +169,14 @@ unsupported-base = "error"
 unused-ignore-comment = "error"
 useless-overload-body = "error"
 
-
-# ======================================================================================
-# pytest configuration
-# ======================================================================================
-
 [tool.pytest.ini_options]
-addopts = ["--pdbcls=pdbp:Pdb"]
-filterwarnings = []
-norecursedirs = ["docs"]
-
-
-# ======================================================================================
-# pytask configuration
-# ======================================================================================
+addopts = [ "--pdbcls=pdbp:Pdb" ]
+filterwarnings = [ ]
+norecursedirs = [ "docs" ]
 
 [tool.pytask.ini_options]
-paths = ["./src/project_name"]
+paths = [ "./src/project_name" ]
 pdbcls = "pdbp:Pdb"
-
-
-# ======================================================================================
-# yamlfix configuration
-# ======================================================================================
 
 [tool.yamlfix]
 line_length = 88
@@ -252,51 +187,34 @@ sequence_style = "block_style"
 ### Tier C: Minimal Configuration
 
 ```toml
-# ======================================================================================
-# Project metadata
-# ======================================================================================
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
 
 [project]
 name = "project-name"
-requires-python = ">=3.13"
 version = "0.1.0"
-
-
-# ======================================================================================
-# Build system configuration
-# ======================================================================================
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
-
-
-# ======================================================================================
-# Ruff configuration
-# ======================================================================================
+requires-python = ">=3.13"
 
 [tool.ruff]
 fix = true
 target-version = "py313"
 
-[tool.ruff.lint]
-extend-ignore = [
-    "ANN",      # Type annotations
-    "COM812",   # Conflicts with ruff-format
-    "D",        # Docstrings
-    "EM101",    # Exception must not use a string literal
-    "EM102",    # Exception must not use an f-string literal
-    "ISC001",   # Conflicts with ruff-format
-    "S101",     # Use of assert
-    "TC001",    # Move application import into a type-checking block
-    "TC002",    # Move third-party import into a type-checking block
-    "TC003",    # Move standard library import into a type-checking block
-    "TRY003",   # Long messages outside exception class
+lint.select = [ "ALL" ]
+lint.extend-ignore = [
+  "ANN",    # Type annotations
+  "COM812", # Conflicts with ruff-format
+  "D",      # Docstrings
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "ISC001", # Conflicts with ruff-format
+  "S101",   # Use of assert
+  "TC001",  # Move application import into a type-checking block
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
 ]
-select = ["ALL"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+lint.pydocstyle.convention = "google"
 ```
 
 ______________________________________________________________________
@@ -314,10 +232,10 @@ repos:
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
-  - repo: https://github.com/tox-dev/tox-toml-fmt
-    rev: v1.2.2
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.12.1
     hooks:
-      - id: tox-toml-fmt
+      - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.19.1
     hooks:
