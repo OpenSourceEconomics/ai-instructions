@@ -28,6 +28,7 @@ based on what the project actually contains.
 | **Docstring style**  | Google                       |
 | **Line length**      | 88                           |
 | **Linter/formatter** | ruff with `select = ["ALL"]` |
+| **TOML formatter**   | pyproject-fmt                |
 | **Package manager**  | pixi only (no venv/env)      |
 | **pytest markers**   | Only add when actually used  |
 | **Type checker**     | ty (not mypy)                |
@@ -178,6 +179,12 @@ norecursedirs = [ "docs" ]
 paths = [ "./src/project_name" ]
 pdbcls = "pdbp:Pdb"
 
+[tool.pyproject-fmt]
+column_width = 88
+max_supported_python = "3.14"
+table_format = "long"
+collapse_tables = [ "tool.hatch" ]
+
 [tool.yamlfix]
 line_length = 88
 none_representation = "null"
@@ -215,6 +222,12 @@ lint.extend-ignore = [
   "TRY003", # Long messages outside exception class
 ]
 lint.pydocstyle.convention = "google"
+
+[tool.pyproject-fmt]
+column_width = 88
+max_supported_python = "3.14"
+table_format = "long"
+collapse_tables = [ "tool.hatch" ]
 ```
 
 ______________________________________________________________________

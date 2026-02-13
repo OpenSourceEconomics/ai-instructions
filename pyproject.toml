@@ -15,8 +15,9 @@ classifiers = [
 [tool.ruff]
 target-version = "py313"
 fix = true
-lint.select = [ "ALL" ]
-lint.extend-ignore = [
+[tool.ruff.lint]
+select = [ "ALL" ]
+extend-ignore = [
   "ANN",    # Type annotations
   "COM812", # Conflicts with ruff-format
   "D",      # Docstrings
@@ -29,8 +30,14 @@ lint.extend-ignore = [
   "TC003",  # Move standard library import into a type-checking block
   "TRY003", # Long messages outside exception class
 ]
-lint.per-file-ignores."boilerplate/.claude/*" = [
+per-file-ignores."boilerplate/.claude/*" = [
   "BLE001", # Blind exception (needed for robust JSON parsing)
   "T201",   # Print (required for hook output)
 ]
-lint.pydocstyle.convention = "google"
+pydocstyle.convention = "google"
+
+[tool.pyproject-fmt]
+column_width = 88
+max_supported_python = "3.14"
+table_format = "long"
+collapse_tables = [ "tool.hatch" ]
