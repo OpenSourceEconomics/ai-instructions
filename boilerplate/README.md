@@ -87,26 +87,84 @@ Github = "https://github.com/org/project-name"
 Repository = "https://github.com/org/project-name"
 Tracker = "https://github.com/org/project-name/issues"
 
-[tool.hatch.build.hooks.vcs]
-version-file = "src/project_name/_version.py"
+[tool.hatch]
+build.hooks.vcs.version-file = "src/project_name/_version.py"
+build.targets.sdist.exclude = [ "tests" ]
+build.targets.sdist.only-packages = true
+build.targets.wheel.only-include = [ "src" ]
+build.targets.wheel.sources = [ "src" ]
+metadata.allow-direct-references = true
+version.source = "vcs"
 
-[tool.hatch.build.targets.sdist]
-exclude = [ "tests" ]
-only-packages = true
+[tool.ruff]
+target-version = "py314"
+fix = true
+unsafe-fixes = false
+lint.select = [ "ALL" ]
+lint.extend-ignore = [
+  "COM812", # Conflicts with ruff-format
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "FIX002", # Line contains TODO
+  "ISC001", # Conflicts with ruff-format
+  "TC001",  # Move application import into a type-checking block
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
+]
+lint.per-file-ignores."tests/*" = [
+  "INP001", # Implicit namespace packages
+  "S101",   # Use of assert
+]
+lint.pydocstyle.convention = "google"
 
-[tool.hatch.build.targets.wheel]
-only-include = [ "src" ]
-sources = [ "src" ]
+[tool.ty]
+rules.ambiguous-protocol-member = "error"
+rules.deprecated = "error"
+rules.division-by-zero = "error"
+rules.ignore-comment-unknown-rule = "error"
+rules.invalid-argument-type = "error"
+rules.invalid-ignore-comment = "error"
+rules.invalid-return-type = "error"
+rules.possibly-missing-attribute = "error"
+rules.possibly-missing-implicit-call = "error"
+rules.possibly-missing-import = "error"
+rules.possibly-unresolved-reference = "error"
+rules.redundant-cast = "error"
+rules.undefined-reveal = "error"
+rules.unresolved-global = "error"
+rules.unsupported-base = "error"
+rules.unused-ignore-comment = "error"
+rules.useless-overload-body = "error"
 
-[tool.hatch.metadata]
-allow-direct-references = true
+[tool.pytest]
+ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
+ini_options.filterwarnings = [ ]
+ini_options.norecursedirs = [ "docs" ]
 
-[tool.hatch.version]
-source = "vcs"
+[tool.pytask]
+ini_options.paths = [ "./src/project_name" ]
+ini_options.pdbcls = "pdbp:Pdb"
 
-[tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
+[tool.pyproject-fmt]
+column_width = 88
+max_supported_python = "3.14"
+table_format = "long"
+collapse_tables = [ "tool.hatch", "tool.pytest", "tool.pytask", "tool.ty" ]
+expand_tables = [
+  "tool.pixi.dependencies",
+  "tool.pixi.environments",
+  "tool.pixi.feature.tests.pypi-dependencies",
+  "tool.pixi.feature.tests.tasks",
+  "tool.pixi.pypi-dependencies",
+  "tool.pixi.tasks",
+  "tool.pixi.workspace",
+]
+
+[tool.yamlfix]
+line_length = 88
+none_representation = "null"
+sequence_style = "block_style"
 
 [tool.pixi.dependencies]
 jupyterlab = "*"
@@ -128,67 +186,9 @@ tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
 ty = "ty check"
 
-[tool.ruff]
-fix = true
-target-version = "py314"
-unsafe-fixes = false
-
-lint.select = [ "ALL" ]
-lint.extend-ignore = [
-  "COM812", # Conflicts with ruff-format
-  "EM101",  # Exception must not use a string literal
-  "EM102",  # Exception must not use an f-string literal
-  "FIX002", # Line contains TODO
-  "ISC001", # Conflicts with ruff-format
-  "TC001",  # Move application import into a type-checking block
-  "TC002",  # Move third-party import into a type-checking block
-  "TC003",  # Move standard library import into a type-checking block
-  "TRY003", # Long messages outside exception class
-]
-lint.per-file-ignores."tests/*" = [
-  "INP001", # Implicit namespace packages
-  "S101",   # Use of assert
-]
-lint.pydocstyle.convention = "google"
-
-[tool.ty.rules]
-ambiguous-protocol-member = "error"
-deprecated = "error"
-division-by-zero = "error"
-ignore-comment-unknown-rule = "error"
-invalid-argument-type = "error"
-invalid-ignore-comment = "error"
-invalid-return-type = "error"
-possibly-missing-attribute = "error"
-possibly-missing-implicit-call = "error"
-possibly-missing-import = "error"
-possibly-unresolved-reference = "error"
-redundant-cast = "error"
-undefined-reveal = "error"
-unresolved-global = "error"
-unsupported-base = "error"
-unused-ignore-comment = "error"
-useless-overload-body = "error"
-
-[tool.pytest.ini_options]
-addopts = [ "--pdbcls=pdbp:Pdb" ]
-filterwarnings = [ ]
-norecursedirs = [ "docs" ]
-
-[tool.pytask.ini_options]
-paths = [ "./src/project_name" ]
-pdbcls = "pdbp:Pdb"
-
-[tool.pyproject-fmt]
-column_width = 88
-max_supported_python = "3.14"
-table_format = "long"
-collapse_tables = [ "tool.hatch" ]
-
-[tool.yamlfix]
-line_length = 88
-none_representation = "null"
-sequence_style = "block_style"
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 ```
 
 ### Tier C: Minimal Configuration
@@ -227,7 +227,7 @@ lint.pydocstyle.convention = "google"
 column_width = 88
 max_supported_python = "3.14"
 table_format = "long"
-collapse_tables = [ "tool.hatch" ]
+collapse_tables = [ "tool.hatch", "tool.pytest", "tool.pytask", "tool.ty" ]
 ```
 
 ______________________________________________________________________
@@ -246,7 +246,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.12.1
+    rev: v2.16.2
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -288,7 +288,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.15.5
     hooks:
       - id: ruff-check
         args:
@@ -303,7 +303,7 @@ repos:
           - pyi
           - python
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.2
+    rev: 0.9.1
     hooks:
       - id: nbstripout
         args:
@@ -343,7 +343,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.15.5
     hooks:
       - id: ruff-check
         args:
@@ -438,6 +438,7 @@ docs/_build/
 
 # pixi
 .pixi/
+node_modules/
 
 # Python
 __pycache__/
@@ -512,6 +513,7 @@ docs/_build/
 
 # pixi
 .pixi/
+node_modules/
 
 # Python
 __pycache__/
@@ -556,6 +558,7 @@ src/*/_version.py
 
 # pixi
 .pixi/
+node_modules/
 
 # Python
 __pycache__/
