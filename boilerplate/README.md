@@ -45,11 +45,14 @@ Can be combined like: `py314-jax`, `tests-cuda13`
 ### Tasks
 
 Tasks should be from the set:
-`{tests, tests-with-cov, tests-jax, ty, docs, view-docs, view-paper, view-pres, ...}`
+`{tests, tests-with-cov, tests-jax, ty, build-docs, view-docs, view-paper, view-pres, ...}`
 
 - `ty` task should run `ty check`
-- Include `ty` in the tests feature (not as a separate environment and not in the
-  general pypi dependencies)
+- For single-python projects, include `ty` in `feature.tests` (not as a separate
+  environment and not in the general pypi dependencies)
+- For multi-python-version projects, move `ty` and its stubs to a separate
+  `feature.ty-task` and include that feature only in the latest-python environment, so
+  `pixi run ty` resolves unambiguously
 
 ______________________________________________________________________
 
@@ -97,7 +100,6 @@ metadata.allow-direct-references = true
 version.source = "vcs"
 
 [tool.ruff]
-target-version = "py314"
 fix = true
 unsafe-fixes = false
 lint.select = [ "ALL" ]
@@ -205,7 +207,6 @@ requires-python = ">=3.13"
 
 [tool.ruff]
 fix = true
-target-version = "py313"
 
 lint.select = [ "ALL" ]
 lint.extend-ignore = [
