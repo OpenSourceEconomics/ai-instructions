@@ -38,7 +38,7 @@ based on what the project actually contains.
 ### Environments
 
 Environments should be from the set:
-`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
+`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs, type-checking}`
 
 Can be combined like: `py314-jax`, `tests-cuda13`
 
@@ -48,11 +48,25 @@ Tasks should be from the set:
 `{tests, tests-with-cov, tests-jax, ty, build-docs, view-docs, view-paper, view-pres, ...}`
 
 - `ty` task should run `ty check`
-- For single-python projects, include `ty` in `feature.tests` (not as a separate
-  environment and not in the general pypi dependencies)
-- For multi-python-version projects, move `ty` and its stubs to a separate
-  `feature.ty-task` and include that feature only in the latest-python environment, so
-  `pixi run ty` resolves unambiguously
+- For projects with a single test environment, include `ty` in `feature.tests` (not as a
+  separate environment and not in the general pypi dependencies)
+- For projects with multiple test environments (e.g. `tests-cpu`, `tests-cuda`), move
+  `ty` to a separate `feature.type-checking` and add a dedicated `type-checking`
+  environment that includes only that feature, so `pixi run ty` resolves unambiguously
+
+### CI / ReadTheDocs references
+
+When renaming tasks or environments, also update references in:
+
+- `.github/workflows/*.yml` — `pixi run -e <env> <task>` commands and `environments:` in
+  `setup-pixi`
+- `.readthedocs.yaml` — `pixi run -e docs <task>` in build jobs
+
+To find the latest versions for GitHub Actions:
+
+1. Run `pixi self-update` and note the version
+1. Check https://github.com/prefix-dev/setup-pixi/tags for the latest setup-pixi version
+1. Update `pixi-version:` and `uses: prefix-dev/setup-pixi@` accordingly
 
 ______________________________________________________________________
 
@@ -502,12 +516,19 @@ docs/_build/
 *.bbl
 *.bcf
 *.blg
+*.fdb_latexmk
 *.fls
+*.lof
 *.log
+*.lot
+*.nav
 *.out
 *.run.xml
+*.snm
 *.synctex.gz
 *.toc
+*.vrb
+*.xdv
 
 # macOS
 .DS_Store
