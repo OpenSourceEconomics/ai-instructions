@@ -246,6 +246,22 @@ def test_clean_scale_raises_on_invalid(invalid_input: Any) -> None:
         clean_scale(pd.Series([invalid_input]))
 ```
 
+## Type Checking
+
+Use **ty** (not mypy, not pyright) for type checking.
+
+- Run via `pixi run ty`
+- Suppress errors with `# ty: ignore[rule-name]` (not `# type: ignore`)
+- Always specify the rule name in ignore comments
+
+```python
+# Good
+x = some_call()  # ty: ignore[unresolved-reference]
+
+# Bad - don't use type: ignore
+x = some_call()  # type: ignore
+```
+
 ______________________________________________________________________
 
 # Pandas

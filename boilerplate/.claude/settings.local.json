@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/enforce-pixi.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/approve-variants.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Search",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/approve-search.py"
+          }
+        ]
+      }
+    ]
+  }
+}
