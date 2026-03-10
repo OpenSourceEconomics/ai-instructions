@@ -335,7 +335,7 @@ repos:
         args:
           - --wrap
           - "88"
-        files: (CLAUDE\.md|README\.md)
+        files: (AGENTS\.md|CLAUDE\.md|README\.md)
 ci:
   autoupdate_schedule: monthly
 ```

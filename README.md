@@ -12,7 +12,7 @@ practices regardless of which project an AI agent is assisting with.
 
 ## Usage
 
-Reference `CLAUDE.md` in your project's AI agent configuration to apply these standards.
+Reference `AGENTS.md` in your project's AI agent configuration to apply these standards.
 The file contains guidelines organized by topic:
 
 - **Background**: OS, file systems, floating point, graph theory
