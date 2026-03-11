@@ -40,10 +40,24 @@ propose targeted updates. Preserve all project-specific customizations.
    - **Missing hooks**: hooks in the template but not in the project
    - **Extra hooks**: hooks in the project but not in the template (note these, don't
      remove — they may be intentional)
-   - **Configuration gaps**: missing ruff rules, ty config, pixi environments/tasks
+   - **Incompatible hooks**: flag `forbid-submodules` for removal — projects use
+     `.ai-instructions` as a git submodule
+   - **Configuration gaps**: missing ruff rules, ty config, etc.
    - **Structural issues**: wrong build backend, missing hatch-vcs, etc.
+   - **Pixi environment names**: should follow the standard set
+     (`py3XX`, `numpy`, `jax`, `cpu`, `cuda`, `cuda12`, `cuda13`, `tests`, `docs`,
+     `type-checking`), combined like `py314-jax`, `tests-cuda13`. Flag non-standard
+     names (e.g., `test-cpu` should be `tests-cpu`, `default` should be `py3XX`).
+   - **Pixi task names**: should follow the standard set
+     (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
+     `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
+     names.
 
 5. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
+   For environment/task renames, also check and update:
+   - `CLAUDE.md` command references
+   - `.github/workflows/` CI environment references
+   - Any `Makefile` or scripts referencing old names
 
 ## Rules
 
