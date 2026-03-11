@@ -4,31 +4,49 @@ Common coding standards and guidelines for AI coding agents, derived from the
 [Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/)
 course.
 
-## Purpose
+## Structure
 
-This repository provides a unified set of instructions for AI coding agents working
-across multiple projects. The goal is to ensure consistent code quality, style, and best
-practices regardless of which project an AI agent is assisting with.
+- **`AGENTS.md`** — Universal core standards (type hints, immutability, pixi, code
+  quality). All projects include this.
+- **`modules/`** — Topic-specific standards, selectively included per project:
+  - `pandas.md` — DataFrame conventions, functional data cleaning
+  - `numpy.md` — Vectorization, modern random API
+  - `jax.md` — JIT, vmap, jaxtyping, pytree registration
+  - `optimagic.md` — Optimization with optimagic, algorithm selection
+  - `project-structure.md` — Directory layout, config, reproducibility
+  - `pytask.md` — Task runner patterns with Annotated/Product
+  - `plotting.md` — Plotly conventions
+  - `ml-econometrics.md` — Statsmodels vs scikit-learn guidelines
+- **`profiles/`** — Pre-composed module sets for downstream projects:
+  - `tier-a.md` — Full packages (core + numpy)
+  - `tier-b-research.md` — Research projects (core + pandas, numpy, project-structure,
+    pytask, plotting)
+  - `tier-b-course.md` — Course projects (core + pandas, numpy, plotting,
+    ml-econometrics)
+  - `tier-c.md` — Minimal projects (core only)
+- **`boilerplate/`** — Dev environment configuration templates
 
 ## Usage
 
-Reference `AGENTS.md` in your project's AI agent configuration to apply these standards.
-The file contains guidelines organized by topic:
+### For downstream projects
 
-- **Background**: OS, file systems, floating point, graph theory
-- **Tools**: Shell and terminal usage
-- **Git**: Version control best practices
-- **Python Installation/Execution**: pixi, pytest, pytask
-- **Python Basics**: Data types, functions, pathlib
-- **Debugging**: Agans' rules, debugger usage
-- **Software Engineering**: Naming, testing, error handling, pure functions
-- **Pandas**: Functional data cleaning, dtypes, merging
-- **Scientific Computing**: NumPy, vectorization, Numba
-- **Numerical Optimization**: optimagic, algorithm selection
-- **Projects**: pytask, directory structure, reproducibility
-- **Texts**: Markdown, README writing
-- **Plotting**: plotly.express, graph_objects
-- **Machine Learning/Econometrics**: statsmodels, scikit-learn
+Reference a profile in your project's `CLAUDE.md`:
+
+```
+@.ai-instructions/profiles/tier-b-research.md
+```
+
+Add cross-cutting modules individually as needed:
+
+```
+@.ai-instructions/profiles/tier-b-research.md
+@.ai-instructions/modules/jax.md
+@.ai-instructions/modules/optimagic.md
+```
+
+### For this repo
+
+`CLAUDE.md` includes core + all modules to load the full standard set.
 
 ## Source
 
