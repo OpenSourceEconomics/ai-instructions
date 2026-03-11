@@ -25,6 +25,11 @@ course.
     ml-econometrics)
   - `tier-c.md` — Minimal projects (core only)
 - **`boilerplate/`** — Dev environment configuration templates
+- **`commands/`** — Claude Code slash commands (skills):
+  - `/update-boilerplate` — Compare project config against boilerplate templates,
+    propose updates
+  - `/verify-standards` — Audit project code for coding standard compliance
+  - `/new-task <description>` — Generate a pytask task file from a description
 
 ## Usage
 
