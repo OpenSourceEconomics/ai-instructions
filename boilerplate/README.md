@@ -371,6 +371,8 @@ repos:
       - id: nbstripout
         args:
           - --extra-keys
+          # Remove metadata.kernelspec from this line if using Jupyter Book 2
+          # (mystmd), which needs kernelspec to select the execution kernel.
           - metadata.kernelspec metadata.language_info.version metadata.vscode
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0

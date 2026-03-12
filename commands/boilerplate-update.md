@@ -8,38 +8,83 @@ allowed-tools: Read, Grep, Glob, Bash(pixi:*), Bash(git:*)
 Compare this project's configuration files against the latest boilerplate templates and
 propose targeted updates. Preserve all project-specific customizations.
 
+**Always execute every step from scratch.** Do not skip steps based on prior conversation
+context. Do not reuse answers from previous runs. Each invocation is independent.
+
 ## Steps
 
-1. **Determine project tier.** Ask the user which tier this project belongs to (A, B, or
-   C). Do not guess.
+1. **Update .ai-instructions submodule.** Check if `.ai-instructions/` exists and is a
+   git submodule. If not, ask the user for the path to the ai-instructions repo.
 
-   | Tier            | Description                                  |
-   | --------------- | -------------------------------------------- |
-   | **A: Full**     | Installable packages, complex research       |
-   | **B: Standard** | Research with pytask, courses with notebooks  |
-   | **C: Minimal**  | Documentation, simple LaTeX projects, notes   |
+   If it exists, run a **single** bash command to gather all info at once:
 
-2. **Ask about AI tool configuration.** Ask whether to generate or update AGENTS.md and
-   CLAUDE.md for this project. Explain:
+   ```bash
+   git submodule update --init .ai-instructions 2>/dev/null; \
+   git -C .ai-instructions fetch --all 2>/dev/null; \
+   echo "---CURRENT---"; \
+   git -C .ai-instructions log --oneline -1; \
+   echo "---BRANCH---"; \
+   git -C .ai-instructions branch --show-current; \
+   echo "---REMOTE-BRANCHES---"; \
+   git -C .ai-instructions branch -r; \
+   echo "---HAS-MODULES---"; \
+   ls .ai-instructions/modules/ .ai-instructions/profiles/ 2>/dev/null || echo "MISSING"
+   ```
 
-   - `AGENTS.md` is the primary agent instruction file — read by Claude, Gemini, Codex,
-     Copilot, and Cursor. It contains `@`-includes for shared standards (resolved by
-     Claude and Gemini) plus project-specific instructions.
-   - `CLAUDE.md` is a thin wrapper (`@AGENTS.md`) only needed for Claude Code, which
-     doesn't auto-read AGENTS.md.
-   - No other tool-specific files are needed.
+   Then show the user the current branch/commit and all remote branches. Do NOT use
+   AskUserQuestion for branch selection — it has a 4-option limit which can't fit all
+   branches. Instead, list the branches as text and ask the user to type their choice.
 
-   Also ask which **additional modules** beyond the tier profile to include (e.g., jax,
-   optimagic).
+   After the user picks a branch, switch to it if needed. **Always use `git -C`** to
+   operate on the submodule — never `cd` into it:
 
-3. **Read the boilerplate templates.** The reference templates are in:
+   ```bash
+   git -C .ai-instructions checkout <branch> && git -C .ai-instructions pull
+   ```
+
+   Then verify `.ai-instructions/modules/` and `.ai-instructions/profiles/` exist. If
+   they don't, warn the user that the submodule may be on an old commit.
+
+   Do not proceed until the submodule is confirmed ready with modules/ and profiles/.
+
+2. **Interview: project tier.** Use AskUserQuestion with a single-select question.
+   Options:
+
+   - **A: Full** — Installable packages, complex research
+   - **B: Standard** — Research with pytask, courses with notebooks
+   - **C: Minimal** — Documentation, simple LaTeX projects, notes
+
+   Do not guess. Do not proceed until the user answers. Do not combine this question
+   with any other question.
+
+3. **Interview: additional modules.** First, read the tier profile to see which modules
+   are already included. Then use AskUserQuestion with a multi-select question listing
+   every module from `.ai-instructions/modules/` that is NOT already in the tier profile.
+   Show what the profile already includes for context.
+
+   Do not skip this step. Do not proceed until the user answers. Do not combine this
+   question with any other question.
+
+4. **Interview: AI tool files.** Use AskUserQuestion with a multi-select question.
+   Options:
+
+   - **AGENTS.md** — primary agent instruction file, read by all tools (Claude, Gemini,
+     Codex, Copilot, Cursor). Contains `@`-includes for shared standards plus
+     project-specific instructions.
+   - **CLAUDE.md** — thin `@AGENTS.md` wrapper, only needed for Claude Code (the only
+     tool that doesn't auto-read AGENTS.md).
+
+   Do not skip this step. Do not proceed until the user answers. Do not combine this
+   question with any other question.
+
+5. **Read the boilerplate templates.** The reference templates are in:
    - If `.ai-instructions/` exists: `.ai-instructions/boilerplate/README.md`
    - Otherwise ask the user for the path to the ai-instructions repo
 
    Read the full boilerplate README to understand the expected configuration for the
    determined tier.
 
-4. **Read the project's current configuration.** Read these files:
+6. **Read the project's current configuration.** Read these files:
    - `pyproject.toml`
    - `.pre-commit-config.yaml`
    - `.gitignore`
@@ -48,7 +93,7 @@ propose targeted updates. Preserve all project-specific customizations.
    - `CLAUDE.md` (if exists)
    - Any GitHub Actions workflow files in `.github/workflows/`
 
-5. **Compare and report deviations.** For each file, compare against the tier-appropriate
+7. **Compare and report deviations.** For each file, compare against the tier-appropriate
    boilerplate template. Report:
 
    - **Hook version mismatches**: e.g., ruff v0.15.1 vs template v0.15.5
@@ -63,12 +108,23 @@ propose targeted updates. Preserve all project-specific customizations.
      (`py3XX`, `numpy`, `jax`, `cpu`, `cuda`, `cuda12`, `cuda13`, `tests`, `docs`,
      `type-checking`), combined like `py314-jax`, `tests-cuda13`. Flag non-standard
      names (e.g., `test-cpu` should be `tests-cpu`, `default` should be `py3XX`).
+   - **nbstripout kernelspec**: Check if `pyproject.toml` has `jupyter-book` or `mystmd`
+     as a dependency (in `[project.dependencies]`, `[tool.pixi.dependencies]`, or
+     `[tool.pixi.pypi-dependencies]`). If so, flag that `metadata.kernelspec` should NOT
+     be in nbstripout's `--extra-keys`. If the project doesn't use JB2, ensure
+     `metadata.kernelspec` IS being stripped.
+   - **GitHub Actions versions**: For each `.github/workflows/*.yml`, check ALL versioned
+     references: `uses: <action>@<version>` tags (e.g., `actions/checkout`,
+     `prefix-dev/setup-pixi`, `codecov/codecov-action`, `actions/setup-python`,
+     `pypa/gh-action-pypi-publish`) and pinned tool versions (e.g., `pixi-version:`).
+     For each, check the latest available version (via the action's GitHub tags page) and
+     flag outdated ones.
    - **Pixi task names**: should follow the standard set
      (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
      `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
      names.
 
-6. **Generate or update AGENTS.md.** If the user requested it, generate or update the
+8. **Generate or update AGENTS.md.** If the user selected it in step 4, generate or update the
    project's `AGENTS.md`. Structure:
 
    ```markdown
@@ -93,7 +149,7 @@ propose targeted updates. Preserve all project-specific customizations.
    If an AGENTS.md already exists, preserve existing project-specific content and only
    update the `@`-include lines at the top.
 
-7. **Generate or update CLAUDE.md.** If the user requested it, ensure CLAUDE.md contains:
+9. **Generate or update CLAUDE.md.** If the user selected it in step 4, ensure CLAUDE.md contains:
 
    ```
    @AGENTS.md
@@ -103,7 +159,7 @@ propose targeted updates. Preserve all project-specific customizations.
    content to AGENTS.md (so all tools benefit) and replace CLAUDE.md with just
    `@AGENTS.md`.
 
-8. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
+10. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
    For environment/task renames, also check and update:
    - `AGENTS.md` / `CLAUDE.md` command references
    - `.github/workflows/` CI environment references
