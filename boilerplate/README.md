@@ -9,6 +9,54 @@ Common boilerplate configurations for project/repository setup.
 - In case there is a pre-existing `uv` setup, do NOT add `pixi`.
 - If a GitHub Actions workflow exists, update that if necessary.
 
+## AI Tool Configuration
+
+All project-specific agent instructions live in `AGENTS.md` at the project root. This
+single file serves all AI coding tools.
+
+| Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?                       |
+| -------------- | ------------------ | ---------------------- | ---------------------------------------- |
+| Claude Code    | Via `@AGENTS.md`   | Yes (nested, max 5)    | `CLAUDE.md` containing just `@AGENTS.md` |
+| Gemini CLI     | Yes (auto)         | Yes                    | None                                     |
+| OpenAI Codex   | Yes (primary)      | No                     | None                                     |
+| GitHub Copilot | Yes (auto)         | No                     | None                                     |
+| Cursor         | Yes (auto)         | No                     | None                                     |
+
+### AGENTS.md (project root)
+
+Put `@`-includes for shared standards at the top, then project-specific content below.
+Claude and Gemini resolve the includes; other tools ignore them as plain text but still
+read the project-specific sections.
+
+```markdown
+@.ai-instructions/profiles/tier-b-research.md
+@.ai-instructions/modules/jax.md
+
+# Project Name
+
+## Overview
+
+Brief project description.
+
+## Build & Test
+
+- `pixi run pytest` — run tests
+- `pixi run pytask` — run task pipeline
+- `pixi run ty` — type checking
+
+## Architecture
+
+Project-specific structure and conventions.
+```
+
+### CLAUDE.md (project root)
+
+Only needed for Claude Code. Contains a single line:
+
+```
+@AGENTS.md
+```
+
 ## Project Tiers
 
 Project tiers are based on **content complexity**, not project type. Choose the tier

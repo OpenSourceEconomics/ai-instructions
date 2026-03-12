@@ -3,7 +3,7 @@ description: Compare project config against boilerplate templates and propose up
 allowed-tools: Read, Grep, Glob, Bash(pixi:*), Bash(git:*)
 ---
 
-# Update Boilerplate
+# Boilerplate Update
 
 Compare this project's configuration files against the latest boilerplate templates and
 propose targeted updates. Preserve all project-specific customizations.
@@ -19,21 +19,36 @@ propose targeted updates. Preserve all project-specific customizations.
    | **B: Standard** | Research with pytask, courses with notebooks  |
    | **C: Minimal**  | Documentation, simple LaTeX projects, notes   |
 
-2. **Read the boilerplate templates.** The reference templates are in:
+2. **Ask about AI tool configuration.** Ask whether to generate or update AGENTS.md and
+   CLAUDE.md for this project. Explain:
+
+   - `AGENTS.md` is the primary agent instruction file — read by Claude, Gemini, Codex,
+     Copilot, and Cursor. It contains `@`-includes for shared standards (resolved by
+     Claude and Gemini) plus project-specific instructions.
+   - `CLAUDE.md` is a thin wrapper (`@AGENTS.md`) only needed for Claude Code, which
+     doesn't auto-read AGENTS.md.
+   - No other tool-specific files are needed.
+
+   Also ask which **additional modules** beyond the tier profile to include (e.g., jax,
+   optimagic).
+
+3. **Read the boilerplate templates.** The reference templates are in:
    - If `.ai-instructions/` exists: `.ai-instructions/boilerplate/README.md`
    - Otherwise ask the user for the path to the ai-instructions repo
 
    Read the full boilerplate README to understand the expected configuration for the
    determined tier.
 
-3. **Read the project's current configuration.** Read these files:
+4. **Read the project's current configuration.** Read these files:
    - `pyproject.toml`
    - `.pre-commit-config.yaml`
    - `.gitignore`
    - `.yamllint.yml` (if exists)
+   - `AGENTS.md` (if exists)
+   - `CLAUDE.md` (if exists)
    - Any GitHub Actions workflow files in `.github/workflows/`
 
-4. **Compare and report deviations.** For each file, compare against the tier-appropriate
+5. **Compare and report deviations.** For each file, compare against the tier-appropriate
    boilerplate template. Report:
 
    - **Hook version mismatches**: e.g., ruff v0.15.1 vs template v0.15.5
@@ -53,9 +68,44 @@ propose targeted updates. Preserve all project-specific customizations.
      `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
      names.
 
-5. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
+6. **Generate or update AGENTS.md.** If the user requested it, generate or update the
+   project's `AGENTS.md`. Structure:
+
+   ```markdown
+   @.ai-instructions/profiles/<tier-profile>.md
+   @.ai-instructions/modules/<extra-module>.md
+
+   # Project Name
+
+   ## Overview
+
+   <brief project description>
+
+   ## Build & Test
+
+   <pixi run commands for this project>
+
+   ## Architecture
+
+   <project-specific structure, key directories, conventions>
+   ```
+
+   If an AGENTS.md already exists, preserve existing project-specific content and only
+   update the `@`-include lines at the top.
+
+7. **Generate or update CLAUDE.md.** If the user requested it, ensure CLAUDE.md contains:
+
+   ```
+   @AGENTS.md
+   ```
+
+   If CLAUDE.md already has project-specific content beyond `@`-includes, migrate that
+   content to AGENTS.md (so all tools benefit) and replace CLAUDE.md with just
+   `@AGENTS.md`.
+
+8. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
    For environment/task renames, also check and update:
-   - `CLAUDE.md` command references
+   - `AGENTS.md` / `CLAUDE.md` command references
    - `.github/workflows/` CI environment references
    - Any `Makefile` or scripts referencing old names
 
@@ -70,3 +120,4 @@ propose targeted updates. Preserve all project-specific customizations.
 - **Do not auto-apply changes** — present them for review, then apply only what the user
   approves
 - **Update GitHub Actions** workflow references if task/environment names change
+- **Migrate CLAUDE.md content** to AGENTS.md when possible so all tools benefit

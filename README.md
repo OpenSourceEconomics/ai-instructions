@@ -13,33 +13,38 @@ cd your-project
 git submodule add git@github.com:OpenSourceEconomics/ai-instructions.git .ai-instructions
 ```
 
-### 2. Create or update your `CLAUDE.md`
+### 2. Create your `AGENTS.md`
 
-Pick the profile matching your project tier and prepend `@` includes to your
-`CLAUDE.md`:
+All agent instructions live in `AGENTS.md`. Put `@`-includes at the top (resolved by
+Claude and Gemini; ignored as plain text by Codex, Copilot, Cursor), then
+project-specific content below:
 
-```
+```markdown
 @.ai-instructions/profiles/tier-b-research.md
+@.ai-instructions/modules/jax.md
 
 # Your Project
 
 Project-specific instructions below...
 ```
 
-Add cross-cutting modules individually as needed:
+### 3. Create your `CLAUDE.md`
+
+Claude Code is the only tool that doesn't auto-read `AGENTS.md`, so it needs a thin
+wrapper:
 
 ```
-@.ai-instructions/profiles/tier-a.md
-@.ai-instructions/modules/jax.md
-@.ai-instructions/modules/optimagic.md
+@AGENTS.md
 ```
 
-### 3. Remove `forbid-submodules` hook
+All other tools (Gemini, Codex, Copilot, Cursor) read `AGENTS.md` directly.
+
+### 4. Remove `forbid-submodules` hook
 
 If your `.pre-commit-config.yaml` has a `forbid-submodules` hook, remove it — it
 conflicts with the `.ai-instructions` submodule.
 
-### 4. (Optional) Install slash commands globally
+### 5. (Optional) Install slash commands globally
 
 Symlink the commands for use in any project:
 
@@ -85,7 +90,7 @@ ai-instructions/
 │   ├── tier-b-course.md
 │   └── tier-c.md
 ├── commands/              # Claude Code slash commands
-│   ├── update-boilerplate.md
+│   ├── boilerplate-update.md
 │   ├── verify-standards.md
 │   └── new-task.md
 └── boilerplate/           # Dev environment config templates
@@ -98,7 +103,7 @@ Available after symlinking `commands/` to `~/.claude/commands/`:
 
 | Command                   | Description                                                                                                            |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `/update-boilerplate`     | Compare project config against boilerplate templates, propose updates (hook versions, ruff rules, pixi env/task names) |
+| `/boilerplate-update`     | Compare project config against boilerplate templates, propose updates (hook versions, ruff rules, pixi env/task names) |
 | `/verify-standards`       | Audit Python code for coding standard compliance, produce deviation report                                             |
 | `/new-task <description>` | Generate a pytask task file with correct patterns (Annotated/Product, helper separation)                               |
 
@@ -114,14 +119,18 @@ git add .ai-instructions
 git commit -m "Update ai-instructions"
 ```
 
-## Other Agents
+## Multi-Tool Support
 
-Non-Claude agents can read `AGENTS.md` and the module files directly. Downstream repos
-can keep a thin root `AGENTS.md` pointing to the submodule for discoverability:
+| Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?            |
+| -------------- | ------------------ | ---------------------- | ----------------------------- |
+| Claude Code    | Via `@AGENTS.md`   | Yes                    | `CLAUDE.md` with `@AGENTS.md` |
+| Gemini CLI     | Yes (auto)         | Yes                    | None                          |
+| OpenAI Codex   | Yes (primary)      | No                     | None                          |
+| GitHub Copilot | Yes (auto)         | No                     | None                          |
+| Cursor         | Yes (auto)         | No                     | None                          |
 
-```
-See .ai-instructions/AGENTS.md for coding standards.
-```
+Tools without `@`-include support ignore the `@` lines as plain text but still read the
+project-specific content in `AGENTS.md`.
 
 ## Source
 
