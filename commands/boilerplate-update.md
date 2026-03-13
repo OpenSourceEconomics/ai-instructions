@@ -133,6 +133,9 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - **GitHub Actions schema validation**: If the project has `.github/workflows/`,
      ensure `.pre-commit-config.yaml` includes the `check-github-workflows` hook from
      `python-jsonschema/check-jsonschema`. Flag if missing.
+   - **GitHub Actions file extensions**: Workflow files in `.github/workflows/` should
+     use `.yml` (not `.yaml`), matching GitHub's own convention. Flag any `.yaml` files
+     for renaming.
    - **Configuration gaps**: missing ruff rules, ty config, etc.
    - **Structural issues**: wrong build backend, missing hatch-vcs, etc.
    - **Pixi environment names**: should follow the standard set
@@ -154,12 +157,22 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      flag outdated ones.
    - **mdformat for mystmd projects**: If the project uses `mystmd` (detected via
      dependencies, see nbstripout check above) and has a `docs/` and/or `documents/`
-     directory, ensure `.pre-commit-config.yaml` includes an mdformat hook with
-     `mdformat-myst` (not `mdformat-gfm`). The expected config:
+     directory, the project needs **two** mdformat hooks under the same repo entry —
+     one for GFM (root-level markdown) and one for MyST (docs). Do NOT replace the
+     existing GFM hook; add a second hook alongside it. The expected config:
      ```yaml
      - repo: https://github.com/executablebooks/mdformat
        rev: 1.0.0
        hooks:
+         - id: mdformat
+           additional_dependencies:
+             - mdformat-gfm
+             - mdformat-gfm-alerts
+             - mdformat-ruff
+           args:
+             - --wrap
+             - "88"
+           files: (AGENTS\.md|CLAUDE\.md|README\.md)
          - id: mdformat
            additional_dependencies:
              - mdformat-myst
@@ -170,11 +183,15 @@ context. Do not reuse answers from previous runs. Each invocation is independent
            files: (docs/.|documents/.)
            exclude: (documents/presentation.md)
      ```
-     Adjust the `files:` pattern to cover whichever of `docs/`/`documents/` exist.
-     Only include the `exclude: (documents/presentation.md)` line if
+     The first hook uses `mdformat-gfm` for root-level files only (AGENTS.md, CLAUDE.md,
+     README.md). The second hook uses `mdformat-myst` for docs directories. These MUST
+     be separate hooks because `mdformat-gfm` and `mdformat-myst` are incompatible
+     parsers.
+     Adjust the second hook's `files:` pattern to cover whichever of `docs/`/`documents/`
+     exist. Only include the `exclude: (documents/presentation.md)` line if
      `documents/presentation.md` exists and is a Slidev presentation (look for
-     `theme:`, `---` slide separators, or Slidev frontmatter). Flag if mdformat is
-     missing or uses `mdformat-gfm` instead of `mdformat-myst`.
+     `theme:`, `---` slide separators, or Slidev frontmatter). Flag if the project has
+     only a single mdformat hook trying to cover both GFM and MyST files.
    - **Pixi task names**: should follow the standard set
      (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
      `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard

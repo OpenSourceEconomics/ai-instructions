@@ -183,23 +183,19 @@ lint.per-file-ignores."tests/*" = [
 lint.pydocstyle.convention = "google"
 
 [tool.ty]
+# Promote all warn/ignore-default rules to error.
+# Rules that default to error are omitted (already enforced).
 rules.ambiguous-protocol-member = "error"
 rules.deprecated = "error"
 rules.division-by-zero = "error"
 rules.ignore-comment-unknown-rule = "error"
-rules.invalid-argument-type = "error"
+rules.ineffective-final = "error"
+rules.invalid-enum-member-annotation = "error"
 rules.invalid-ignore-comment = "error"
-rules.invalid-return-type = "error"
-rules.possibly-missing-attribute = "error"
-rules.possibly-missing-implicit-call = "error"
-rules.possibly-missing-import = "error"
-rules.possibly-unresolved-reference = "error"
+rules.invalid-legacy-positional-parameter = "error"
 rules.redundant-cast = "error"
-rules.undefined-reveal = "error"
-rules.unresolved-global = "error"
-rules.unsupported-base = "error"
+rules.unused-awaitable = "error"
 rules.unused-ignore-comment = "error"
-rules.useless-overload-body = "error"
 
 [tool.pytest]
 ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
@@ -355,7 +351,7 @@ repos:
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args:
@@ -412,7 +408,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args:
