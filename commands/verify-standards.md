@@ -55,8 +55,9 @@ AGENTS.md and its modules. Produce a deviation report.
 
 - **inplace**: Flag any `inplace=True` usage.
 - **iterrows**: Flag `iterrows()`, `itertuples()`, row-wise `apply()`.
-- **Copy on write**: Check if `pd.options.mode.copy_on_write = True` is set at
-  script/notebook entry points.
+- **Legacy pd.options**: Flag any `pd.options.mode.copy_on_write` or
+  `pd.options.future.infer_string` usage — these are unnecessary with pandas >= 3.0
+  (CoW is always on, string inference is the default).
 
 ### NumPy (if applicable)
 

@@ -2,14 +2,8 @@
 
 ## Configuration
 
-Always enable at script/notebook start:
-
-```python
-import pandas as pd
-
-pd.options.mode.copy_on_write = True
-pd.options.future.infer_string = True
-```
+Requires **pandas >= 3.0**. Copy-on-Write and string inference are always enabled by
+default — no `pd.options` settings needed.
 
 ## Key Practices
 
