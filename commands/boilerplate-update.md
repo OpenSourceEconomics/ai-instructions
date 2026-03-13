@@ -21,6 +21,7 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    ```bash
    git submodule update --init .ai-instructions 2>/dev/null; \
    git -C .ai-instructions fetch --all 2>/dev/null; \
+   git -C .ai-instructions remote prune origin 2>/dev/null; \
    echo "---CURRENT---"; \
    git -C .ai-instructions log --oneline -1; \
    echo "---BRANCH---"; \
@@ -31,9 +32,10 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    ls .ai-instructions/modules/ .ai-instructions/profiles/ 2>/dev/null || echo "MISSING"
    ```
 
-   Then show the user the current branch/commit and all remote branches. Do NOT use
-   AskUserQuestion for branch selection — it has a 4-option limit which can't fit all
-   branches. Instead, list the branches as text and ask the user to type their choice.
+   Then show the user the current branch/commit and all remote branches. If there are
+   ≤ 4 branches, use AskUserQuestion with single-select. If there are > 4 branches,
+   list them as plain text and ask the user to type their choice (AskUserQuestion has
+   a 4-option limit).
 
    After the user picks a branch, switch to it if needed. **Always use `git -C`** to
    operate on the submodule — never `cd` into it:
@@ -47,8 +49,11 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 
    Do not proceed until the submodule is confirmed ready with modules/ and profiles/.
 
-2. **Interview: project tier.** Use AskUserQuestion with a single-select question.
-   Options:
+2. **Interview: project tier.** First, check if `CLAUDE.md` (or `AGENTS.md`) already
+   contains a `@.ai-instructions/profiles/` include line. If so, infer the tier from the
+   profile name and skip this question — just confirm to the user what tier was detected.
+
+   If no tier is stored, use AskUserQuestion with a single-select question. Options:
 
    - **A: Full** — Installable packages, complex research
    - **B: Standard** — Research with pytask, courses with notebooks
@@ -57,10 +62,16 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    Do not guess. Do not proceed until the user answers. Do not combine this question
    with any other question.
 
-3. **Interview: additional modules.** First, read the tier profile to see which modules
-   are already included. Then use AskUserQuestion with a multi-select question listing
-   every module from `.ai-instructions/modules/` that is NOT already in the tier profile.
-   Show what the profile already includes for context.
+3. **Interview: additional modules.** First, check if `AGENTS.md` already contains
+   `@.ai-instructions/modules/` include lines. If so, show the user the currently
+   included modules and ask if they want to change anything. If they're happy, skip
+   ahead.
+
+   If no modules are stored (or the user wants to change), read the tier profile to see
+   which modules are already included. Then list ALL available modules from
+   `.ai-instructions/modules/` as plain text, marking which ones the tier profile already
+   includes. Ask the user to type which additional modules they want. Do NOT use
+   AskUserQuestion for this — the option list is too long for its 4-option limit.
 
    Do not skip this step. Do not proceed until the user answers. Do not combine this
    question with any other question.
@@ -102,6 +113,26 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      remove — they may be intentional)
    - **Incompatible hooks**: flag `forbid-submodules` for removal — projects use
      `.ai-instructions` as a git submodule
+   - **Legacy section comments in pyproject.toml**: Remove decorative banner comments
+     like `# ====... \n # Ruff configuration \n # ====...`. These add no value — the
+     `[tool.ruff]` headers are self-documenting. Flag all such banners for removal.
+   - **Ruff ignore rule descriptions**: Every rule code in `extend-ignore`,
+     `per-file-ignores`, and `extend-per-file-ignores` (in ALL sections including
+     `[tool.ruff.lint]` and any `[tool.pixi.feature.*.dependencies]`-adjacent overrides)
+     must have a brief inline comment explaining what it does. Example:
+     ```toml
+     extend-ignore = [
+       "COM812",  # Avoid conflicts with ruff-format
+       "D100",    # TEMPORARY: Missing docstring in public module
+       "EM101",   # Exception must not use a string literal
+       "F722",    # https://docs.kidger.site/jaxtyping/faq/#flake8-or-ruff-are-throwing-an-error
+     ]
+     ```
+     Flag any rule codes missing descriptions. For `TEMPORARY` suppressions, keep the
+     `TEMPORARY:` prefix so they're easy to grep for.
+   - **GitHub Actions schema validation**: If the project has `.github/workflows/`,
+     ensure `.pre-commit-config.yaml` includes the `check-github-workflows` hook from
+     `python-jsonschema/check-jsonschema`. Flag if missing.
    - **Configuration gaps**: missing ruff rules, ty config, etc.
    - **Structural issues**: wrong build backend, missing hatch-vcs, etc.
    - **Pixi environment names**: should follow the standard set
@@ -109,8 +140,10 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `type-checking`), combined like `py314-jax`, `tests-cuda13`. Flag non-standard
      names (e.g., `test-cpu` should be `tests-cpu`, `default` should be `py3XX`).
    - **nbstripout kernelspec**: Check if `pyproject.toml` has `jupyter-book` or `mystmd`
-     as a dependency (in `[project.dependencies]`, `[tool.pixi.dependencies]`, or
-     `[tool.pixi.pypi-dependencies]`). If so, flag that `metadata.kernelspec` should NOT
+     as a dependency anywhere (including `[project.dependencies]`,
+     `[tool.pixi.dependencies]`, `[tool.pixi.pypi-dependencies]`, and any
+     `[tool.pixi.feature.*.dependencies]` or `[tool.pixi.feature.*.pypi-dependencies]`
+     sections). If so, flag that `metadata.kernelspec` should NOT
      be in nbstripout's `--extra-keys`. If the project doesn't use JB2, ensure
      `metadata.kernelspec` IS being stripped.
    - **GitHub Actions versions**: For each `.github/workflows/*.yml`, check ALL versioned
@@ -119,6 +152,29 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `pypa/gh-action-pypi-publish`) and pinned tool versions (e.g., `pixi-version:`).
      For each, check the latest available version (via the action's GitHub tags page) and
      flag outdated ones.
+   - **mdformat for mystmd projects**: If the project uses `mystmd` (detected via
+     dependencies, see nbstripout check above) and has a `docs/` and/or `documents/`
+     directory, ensure `.pre-commit-config.yaml` includes an mdformat hook with
+     `mdformat-myst` (not `mdformat-gfm`). The expected config:
+     ```yaml
+     - repo: https://github.com/executablebooks/mdformat
+       rev: 1.0.0
+       hooks:
+         - id: mdformat
+           additional_dependencies:
+             - mdformat-myst
+             - mdformat-ruff
+           args:
+             - --wrap
+             - "88"
+           files: (docs/.|documents/.)
+           exclude: (documents/presentation.md)
+     ```
+     Adjust the `files:` pattern to cover whichever of `docs/`/`documents/` exist.
+     Only include the `exclude: (documents/presentation.md)` line if
+     `documents/presentation.md` exists and is a Slidev presentation (look for
+     `theme:`, `---` slide separators, or Slidev frontmatter). Flag if mdformat is
+     missing or uses `mdformat-gfm` instead of `mdformat-myst`.
    - **Pixi task names**: should follow the standard set
      (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
      `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
@@ -160,10 +216,20 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    `@AGENTS.md`.
 
 10. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
-   For environment/task renames, also check and update:
-   - `AGENTS.md` / `CLAUDE.md` command references
-   - `.github/workflows/` CI environment references
-   - Any `Makefile` or scripts referencing old names
+    For environment/task renames, also check and update:
+    - `AGENTS.md` / `CLAUDE.md` command references
+    - `.github/workflows/` CI environment references
+    - Any `Makefile` or scripts referencing old names
+
+11. **Run pre-commit.** After applying approved changes, run:
+
+    ```bash
+    pixi run pre-commit run --all-files
+    ```
+
+    If any hooks fail on files that don't exist or don't apply to this project (e.g., a
+    hook targeting `.md` files in a project with none), list those hooks and ask the user
+    to confirm removal. Remove confirmed hooks from `.pre-commit-config.yaml`.
 
 ## Rules
 
