@@ -199,6 +199,21 @@ ______________________________________________________________________
 - Avoid: abbreviations, single letters (`n`, `c`, `s`, `u` conflict with debugger),
   built-in names (`list`, `dict`, `type`)
 
+## Module Layout
+
+Write "deep" modules: important public function(s) at the top, private helpers below.
+Readers should see the API first without scrolling past implementation details.
+
+Never add decorative section-separator comments like:
+
+```python
+# ---------------------------------------------------------------------------
+# Section name
+# ---------------------------------------------------------------------------
+```
+
+Code structure should be self-evident from function names and ordering.
+
 ## Pure Functions
 
 Write pure functions whenever possible:

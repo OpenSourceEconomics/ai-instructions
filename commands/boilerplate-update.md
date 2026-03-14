@@ -252,6 +252,10 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 
 - **Never overwrite** existing ruff exclusions, ty ignore rules, or per-file-ignores
   unless explicitly asked
+- **Preserve project-specific ty suppressions**: When updating `[tool.ty]` rules, keep
+  any rules set to `"ignore"` or `"warn"` — these are intentional project overrides
+  (e.g., `rules.empty-body = "ignore"` for decorator patterns). Only replace the
+  standard promoted-to-error rules from the boilerplate template
 - **Never add pixi** if the project already uses `uv` — flag this and skip
 - **Never remove** project-specific hooks (nbstripout, codespell, custom validators)
 - **Preserve** custom pytest markers, filterwarnings, and test paths
