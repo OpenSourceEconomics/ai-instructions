@@ -152,6 +152,14 @@ ______________________________________________________________________
 
 # Python Environment
 
+## Python Version
+
+Minimum Python version is **3.14** unless a project specifies otherwise. Use 3.14+
+features freely, including:
+
+- `except ValueError, TypeError:` without parentheses (PEP 758) — this is **not** Python
+  2 syntax. It is valid when there is no `as` clause.
+
 ## Pixi Package Manager
 
 Pixi is the required package and environment manager.
