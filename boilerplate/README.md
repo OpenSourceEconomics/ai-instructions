@@ -193,6 +193,7 @@ rules.ineffective-final = "error"
 rules.invalid-enum-member-annotation = "error"
 rules.invalid-ignore-comment = "error"
 rules.invalid-legacy-positional-parameter = "error"
+rules.possibly-missing-submodule = "error"
 rules.redundant-cast = "error"
 rules.unused-awaitable = "error"
 rules.unused-ignore-comment = "error"
@@ -488,15 +489,13 @@ MANIFEST
 sdist/
 wheels/
 
-# Documentation
-docs/_build/
-
 # IDE
 .idea/
 .vscode/
 
-# Jupyter
+# Jupyter / Jupyter Book
 .ipynb_checkpoints/
+_build
 
 # macOS
 .DS_Store
@@ -550,15 +549,13 @@ MANIFEST
 sdist/
 wheels/
 
-# Documentation
-docs/_build/
-
 # IDE
 .idea/
 .vscode/
 
-# Jupyter
+# Jupyter / Jupyter Book
 .ipynb_checkpoints/
+_build
 
 # LaTeX
 *-blx.bib
