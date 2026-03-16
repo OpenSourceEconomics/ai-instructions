@@ -284,3 +284,16 @@ x = some_call()  # ty: ignore[unresolved-reference]
 # Bad - don't use type: ignore
 x = some_call()  # type: ignore
 ```
+
+## Verification After Changes
+
+Run these checks after making code changes. Skip any that don't apply to the project.
+
+1. **Pre-commit**: Stage new files, then `pixi run pre-commit run --all-files` (or
+   `prek run --all-files` if globally installed). Fix any failures.
+1. **Tests**: `pixi run tests` (or the project's test task).
+1. **Type checking**: `pixi run ty`.
+1. **Notebook diffs**: If `.ipynb` files changed, verify the diff looks like clean
+   cell-content changes, not JSON noise (cell metadata, execution counts, output blobs).
+   If the diff is bloated, the notebook was not properly stripped — run nbstripout
+   before committing.
