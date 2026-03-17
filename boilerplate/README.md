@@ -9,6 +9,54 @@ Common boilerplate configurations for project/repository setup.
 - In case there is a pre-existing `uv` setup, do NOT add `pixi`.
 - If a GitHub Actions workflow exists, update that if necessary.
 
+## AI Tool Configuration
+
+All project-specific agent instructions live in `AGENTS.md` at the project root. This
+single file serves all AI coding tools.
+
+| Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?                       |
+| -------------- | ------------------ | ---------------------- | ---------------------------------------- |
+| Claude Code    | Via `@AGENTS.md`   | Yes (nested, max 5)    | `CLAUDE.md` containing just `@AGENTS.md` |
+| Gemini CLI     | Yes (auto)         | Yes                    | None                                     |
+| OpenAI Codex   | Yes (primary)      | No                     | None                                     |
+| GitHub Copilot | Yes (auto)         | No                     | None                                     |
+| Cursor         | Yes (auto)         | No                     | None                                     |
+
+### AGENTS.md (project root)
+
+Put `@`-includes for shared standards at the top, then project-specific content below.
+Claude and Gemini resolve the includes; other tools ignore them as plain text but still
+read the project-specific sections.
+
+```markdown
+@.ai-instructions/profiles/tier-b-research.md
+@.ai-instructions/modules/jax.md
+
+# Project Name
+
+## Overview
+
+Brief project description.
+
+## Build & Test
+
+- `pixi run pytest` — run tests
+- `pixi run pytask` — run task pipeline
+- `pixi run ty` — type checking
+
+## Architecture
+
+Project-specific structure and conventions.
+```
+
+### CLAUDE.md (project root)
+
+Only needed for Claude Code. Contains a single line:
+
+```
+@AGENTS.md
+```
+
 ## Project Tiers
 
 Project tiers are based on **content complexity**, not project type. Choose the tier
@@ -118,40 +166,46 @@ fix = true
 unsafe-fixes = false
 lint.select = [ "ALL" ]
 lint.extend-ignore = [
-  "COM812", # Conflicts with ruff-format
-  "EM101",  # Exception must not use a string literal
-  "EM102",  # Exception must not use an f-string literal
-  "FIX002", # Line contains TODO
-  "ISC001", # Conflicts with ruff-format
-  "TC001",  # Move application import into a type-checking block
-  "TC002",  # Move third-party import into a type-checking block
-  "TC003",  # Move standard library import into a type-checking block
-  "TRY003", # Long messages outside exception class
+  "COM812",  # Conflicts with ruff-format
+  "EM101",   # Exception must not use a string literal
+  "EM102",   # Exception must not use an f-string literal
+  "FIX002",  # Line contains TODO
+  "ISC001",  # Conflicts with ruff-format
+  "PLR0913", # Too many arguments in function definition
+  "S301",    # pickle module (standard intermediate format)
+  # TC001-TC003: TYPE_CHECKING guards. Always ignore for Python 3.14+ projects
+  # (PEP 649 deferred evaluation makes them unnecessary).
+  "TC001",   # Move application import into a type-checking block
+  "TC002",   # Move third-party import into a type-checking block
+  "TC003",   # Move standard library import into a type-checking block
+  "TRY003",  # Long messages outside exception class
+]
+lint.per-file-ignores."task_*.py" = [
+  "ARG001",  # Unused function argument (pytask signatures)
 ]
 lint.per-file-ignores."tests/*" = [
-  "INP001", # Implicit namespace packages
-  "S101",   # Use of assert
+  "D",       # Docstrings
+  "INP001",  # Implicit namespace packages
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert
 ]
 lint.pydocstyle.convention = "google"
 
 [tool.ty]
+# Promote all warn/ignore-default rules to error.
+# Rules that default to error are omitted (already enforced).
 rules.ambiguous-protocol-member = "error"
 rules.deprecated = "error"
 rules.division-by-zero = "error"
 rules.ignore-comment-unknown-rule = "error"
-rules.invalid-argument-type = "error"
+rules.ineffective-final = "error"
+rules.invalid-enum-member-annotation = "error"
 rules.invalid-ignore-comment = "error"
-rules.invalid-return-type = "error"
-rules.possibly-missing-attribute = "error"
-rules.possibly-missing-implicit-call = "error"
-rules.possibly-missing-import = "error"
-rules.possibly-unresolved-reference = "error"
+rules.invalid-legacy-positional-parameter = "error"
+rules.possibly-missing-submodule = "error"
 rules.redundant-cast = "error"
-rules.undefined-reveal = "error"
-rules.unresolved-global = "error"
-rules.unsupported-base = "error"
+rules.unused-awaitable = "error"
 rules.unused-ignore-comment = "error"
-rules.useless-overload-body = "error"
 
 [tool.pytest]
 ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
@@ -261,7 +315,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.2
+    rev: v2.19.0
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -302,8 +356,12 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.0
+    hooks:
+      - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args:
@@ -323,6 +381,8 @@ repos:
       - id: nbstripout
         args:
           - --extra-keys
+          # Remove metadata.kernelspec from this line if using Jupyter Book 2
+          # (mystmd), which needs kernelspec to select the execution kernel.
           - metadata.kernelspec metadata.language_info.version metadata.vscode
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0
@@ -335,7 +395,7 @@ repos:
         args:
           - --wrap
           - "88"
-        files: (CLAUDE\.md|README\.md)
+        files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
 ci:
   autoupdate_schedule: monthly
 ```
@@ -358,7 +418,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args:
@@ -438,15 +498,13 @@ MANIFEST
 sdist/
 wheels/
 
-# Documentation
-docs/_build/
-
 # IDE
 .idea/
 .vscode/
 
-# Jupyter
+# Jupyter / Jupyter Book
 .ipynb_checkpoints/
+_build
 
 # macOS
 .DS_Store
@@ -500,15 +558,13 @@ MANIFEST
 sdist/
 wheels/
 
-# Documentation
-docs/_build/
-
 # IDE
 .idea/
 .vscode/
 
-# Jupyter
+# Jupyter / Jupyter Book
 .ipynb_checkpoints/
+_build
 
 # LaTeX
 *-blx.bib
