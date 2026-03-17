@@ -22,7 +22,9 @@ def clean_data(raw: pd.DataFrame) -> pd.DataFrame: ...
 def load_config(path: Path) -> dict[str, Any]: ...
 ```
 
-- Use `from __future__ import annotations` for forward references
+- Do NOT use `from __future__ import annotations` in Python 3.14+ projects — PEP 649
+  deferred evaluation makes it unnecessary and it changes runtime annotation semantics.
+  For projects supporting < 3.14, use it for forward references.
 - Prefer `X | None` over `Optional[X]` in Python 3.10+
 - Use `collections.abc` for abstract types: `Sequence`, `Mapping`, `Iterable`
 
@@ -43,8 +45,11 @@ from types import MappingProxyType
 @dataclass(frozen=True)
 class ModelConfig:
     n_periods: int
+    """Number of time periods."""
     n_states: int
+    """Number of discrete states per period."""
     discount_factor: float = 0.95
+    """Subjective discount factor."""
 
     @property
     def n_total(self) -> int:
@@ -204,6 +209,7 @@ ______________________________________________________________________
 - `CamelCase` - classes
 - Function names start with verb: `create_`, `calculate_`, `convert_`, `get_`
 - Private functions: `_underscore` prefix
+- Use `func`, not `fn`, when abbreviating "function" (e.g., `apply_func`)
 - Avoid: abbreviations, single letters (`n`, `c`, `s`, `u` conflict with debugger),
   built-in names (`list`, `dict`, `type`)
 
@@ -221,6 +227,30 @@ Never add decorative section-separator comments like:
 ```
 
 Code structure should be self-evident from function names and ordering.
+
+## Docstrings
+
+Use **Google convention** (`pydocstyle.convention = "google"`). Use **MyST** syntax (not
+reStructuredText) for markup inside docstrings: `` `code` ``, `$math$`, markdown links.
+
+- Imperative mood in summary lines ("Calculate utility", not "Calculates utility")
+- Use inline field docstrings (PEP 257) for dataclass attributes (see Frozen Dataclasses
+  example above)
+
+```python
+def calculate_utility(consumption: float, gamma: float = 1.5) -> float:
+    """Calculate CRRA utility.
+
+    Args:
+        consumption: Consumption level (must be positive).
+        gamma: Coefficient of relative risk aversion.
+
+    Returns:
+        Utility value.
+
+    """
+    ...
+```
 
 ## Pure Functions
 

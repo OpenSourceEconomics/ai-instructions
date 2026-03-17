@@ -166,19 +166,28 @@ fix = true
 unsafe-fixes = false
 lint.select = [ "ALL" ]
 lint.extend-ignore = [
-  "COM812", # Conflicts with ruff-format
-  "EM101",  # Exception must not use a string literal
-  "EM102",  # Exception must not use an f-string literal
-  "FIX002", # Line contains TODO
-  "ISC001", # Conflicts with ruff-format
-  "TC001",  # Move application import into a type-checking block
-  "TC002",  # Move third-party import into a type-checking block
-  "TC003",  # Move standard library import into a type-checking block
-  "TRY003", # Long messages outside exception class
+  "COM812",  # Conflicts with ruff-format
+  "EM101",   # Exception must not use a string literal
+  "EM102",   # Exception must not use an f-string literal
+  "FIX002",  # Line contains TODO
+  "ISC001",  # Conflicts with ruff-format
+  "PLR0913", # Too many arguments in function definition
+  "S301",    # pickle module (standard intermediate format)
+  # TC001-TC003: TYPE_CHECKING guards. Always ignore for Python 3.14+ projects
+  # (PEP 649 deferred evaluation makes them unnecessary).
+  "TC001",   # Move application import into a type-checking block
+  "TC002",   # Move third-party import into a type-checking block
+  "TC003",   # Move standard library import into a type-checking block
+  "TRY003",  # Long messages outside exception class
+]
+lint.per-file-ignores."task_*.py" = [
+  "ARG001",  # Unused function argument (pytask signatures)
 ]
 lint.per-file-ignores."tests/*" = [
-  "INP001", # Implicit namespace packages
-  "S101",   # Use of assert
+  "D",       # Docstrings
+  "INP001",  # Implicit namespace packages
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert
 ]
 lint.pydocstyle.convention = "google"
 

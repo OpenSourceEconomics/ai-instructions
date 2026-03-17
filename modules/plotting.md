@@ -1,5 +1,7 @@
 # Plotting (Plotly)
 
+**Use Plotly exclusively.** Do not use matplotlib, seaborn, or other plotting libraries.
+
 ```python
 import plotly.express as px
 import plotly.io as pio

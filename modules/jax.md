@@ -69,3 +69,16 @@ jax.tree_util.register_pytree_node(
     lambda keys, values: MappingProxyType(dict(zip(keys, values, strict=True))),
 )
 ```
+
+## Ruff Configuration for jaxtyping
+
+If the project uses `jaxtyping`, add `F722` to `extend-ignore` in the ruff config:
+
+```toml
+extend-ignore = [
+  "F722",  # https://docs.kidger.site/jaxtyping/faq/#flake8-or-ruff-are-throwing-an-error
+]
+```
+
+The `Float[Array, "n_periods n_states"]` syntax triggers F722 (syntax error in forward
+annotation). This is a known jaxtyping/ruff incompatibility.

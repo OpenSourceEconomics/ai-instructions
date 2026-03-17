@@ -32,12 +32,13 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    ls .ai-instructions/modules/ .ai-instructions/profiles/ 2>/dev/null || echo "MISSING"
    ```
 
-   Then show the user the current branch/commit and all remote branches. If there are
-   ≤ 4 branches, use AskUserQuestion with single-select. If there are > 4 branches,
-   list them as plain text and ask the user to type their choice (AskUserQuestion has
-   a 4-option limit).
+   Then show the user the current branch/commit and all remote branches. If there is
+   only **one** remote branch (typically `main`), skip the branch selection question and
+   use it automatically. If there are 2-4 branches, use AskUserQuestion with
+   single-select. If there are > 4 branches, list them as plain text and ask the user
+   to type their choice (AskUserQuestion has a 4-option limit).
 
-   After the user picks a branch, switch to it if needed. **Always use `git -C`** to
+   After the branch is selected, switch to it if needed. **Always use `git -C`** to
    operate on the submodule — never `cd` into it:
 
    ```bash
@@ -192,6 +193,10 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `documents/presentation.md` exists and is a Slidev presentation (look for
      `theme:`, `---` slide separators, or Slidev frontmatter). Flag if the project has
      only a single mdformat hook trying to cover both GFM and MyST files.
+   - **TEMPORARY ruff ignores**: Grep for `TEMPORARY` in `extend-ignore` and
+     `per-file-ignores`. For each, ask the user whether it is still needed.
+   - **jaxtyping F722**: If the project uses `jaxtyping` (check dependencies), ensure
+     `"F722"` is in `extend-ignore` with comment linking to the jaxtyping FAQ.
    - **Pixi task names**: should follow the standard set
      (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
      `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
