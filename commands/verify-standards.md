@@ -46,6 +46,10 @@ AGENTS.md and its modules. Produce a deviation report.
 - **Naming**: Flag single-letter variable names (`n`, `c`, `s`, `u`, `x`, `y` outside
   list comprehensions and lambdas). Flag function names not starting with a verb.
   Flag `CamelCase` for non-classes.
+- **Module layout ("deep modules")**: For each `.py` file in `src/`, check that public
+  functions (no `_` prefix) appear before private helpers (`_` prefix). The important
+  public API should be at the top of the file so readers see it first. Flag files where
+  private helpers are interleaved with or precede public functions.
 - **Pure functions**: Flag functions that mix I/O with computation (reading files AND
   processing data in the same function body, outside task functions).
 - **Error messages**: Flag bare `raise ValueError` or `raise TypeError` without a
