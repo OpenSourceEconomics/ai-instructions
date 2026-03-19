@@ -48,6 +48,11 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    Then verify `.ai-instructions/modules/` and `.ai-instructions/profiles/` exist. If
    they don't, warn the user that the submodule may be on an old commit.
 
+   **Submodule URL must use HTTPS.** Check the submodule URL in `.gitmodules`. If it
+   uses SSH (`git@github.com:...`), flag it for replacement with HTTPS
+   (`https://github.com/...`). SSH URLs fail on CI runners and ReadTheDocs which don't
+   have SSH keys configured.
+
    Do not proceed until the submodule is confirmed ready with modules/ and profiles/.
 
 2. **Interview: project tier.** First, check if `CLAUDE.md` (or `AGENTS.md`) already

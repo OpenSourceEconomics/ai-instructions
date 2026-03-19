@@ -57,6 +57,15 @@ Only needed for Claude Code. Contains a single line:
 @AGENTS.md
 ```
 
+### .ai-instructions submodule
+
+Add this repo as a git submodule. **Always use HTTPS** (not SSH) — SSH URLs fail on CI
+runners and ReadTheDocs.
+
+```bash
+git submodule add https://github.com/OpenSourceEconomics/ai-instructions .ai-instructions
+```
+
 ## Project Tiers
 
 Project tiers are based on **content complexity**, not project type. Choose the tier
