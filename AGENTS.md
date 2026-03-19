@@ -1,3 +1,7 @@
+@modules/pandas.md @modules/numpy.md @modules/jax.md @modules/optimagic.md
+@modules/project-structure.md @modules/pytask.md @modules/plotting.md
+@modules/ml-econometrics.md @modules/dags.md
+
 # AI Coding Standards
 
 Guidelines for AI agents, mostly derived from
