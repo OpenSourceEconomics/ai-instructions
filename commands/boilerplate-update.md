@@ -90,6 +90,8 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      project-specific instructions.
    - **CLAUDE.md** — thin `@AGENTS.md` wrapper, only needed for Claude Code (the only
      tool that doesn't auto-read AGENTS.md).
+   - **GEMINI.md** — thin `@AGENTS.md` wrapper for the Gemini CLI (used by roborev for
+     code reviews).
 
    Do not skip this step. Do not proceed until the user answers. Do not combine this
    question with any other question.
@@ -108,6 +110,7 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - `.yamllint.yml` (if exists)
    - `AGENTS.md` (if exists)
    - `CLAUDE.md` (if exists)
+   - `GEMINI.md` (if exists)
    - Any GitHub Actions workflow files in `.github/workflows/`
 
 7. **Compare and report deviations.** For each file, compare against the tier-appropriate
@@ -242,13 +245,23 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    content to AGENTS.md (so all tools benefit) and replace CLAUDE.md with just
    `@AGENTS.md`.
 
-10. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
+10. **Generate or update GEMINI.md.** If the user selected it in step 4, ensure GEMINI.md
+    contains:
+
+    ```
+    @AGENTS.md
+    ```
+
+    If `AGENTS.md` is not at the repo root (e.g., in a parent directory), adjust the path
+    to match whatever `CLAUDE.md` uses.
+
+11. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
     For environment/task renames, also check and update:
     - `AGENTS.md` / `CLAUDE.md` command references
     - `.github/workflows/` CI environment references
     - Any `Makefile` or scripts referencing old names
 
-11. **Run pre-commit.** After applying approved changes, run:
+12. **Run pre-commit.** After applying approved changes, run:
 
     ```bash
     pixi run pre-commit run --all-files

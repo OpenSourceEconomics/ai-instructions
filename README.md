@@ -10,7 +10,7 @@ course.
 
 ```bash
 cd your-project
-git submodule add git@github.com:OpenSourceEconomics/ai-instructions.git .ai-instructions
+git submodule add https://github.com/OpenSourceEconomics/ai-instructions.git .ai-instructions
 ```
 
 ### 2. Create your `AGENTS.md`
@@ -30,21 +30,29 @@ Project-specific instructions below...
 
 ### 3. Create your `CLAUDE.md`
 
-Claude Code is the only tool that doesn't auto-read `AGENTS.md`, so it needs a thin
-wrapper:
+Claude Code doesn't auto-read `AGENTS.md`, so it needs a thin wrapper:
 
 ```
 @AGENTS.md
 ```
 
-All other tools (Gemini, Codex, Copilot, Cursor) read `AGENTS.md` directly.
+### 4. Create your `GEMINI.md`
 
-### 4. Remove `forbid-submodules` hook
+Gemini CLI reads `AGENTS.md` directly but doesn't resolve `@`-includes from it. Create a
+`GEMINI.md` so the Gemini CLI (and roborev reviews) picks up the shared standards:
+
+```
+@AGENTS.md
+```
+
+All other tools (Codex, Copilot, Cursor) read `AGENTS.md` directly.
+
+### 5. Remove `forbid-submodules` hook
 
 If your `.pre-commit-config.yaml` has a `forbid-submodules` hook, remove it — it
 conflicts with the `.ai-instructions` submodule.
 
-### 5. (Optional) Install slash commands globally
+### 6. (Optional) Install slash commands globally
 
 Symlink the commands for use in any project:
 
@@ -83,7 +91,8 @@ ai-instructions/
 │   ├── project-structure.md
 │   ├── pytask.md
 │   ├── plotting.md
-│   └── ml-econometrics.md
+│   ├── ml-econometrics.md
+│   └── dags.md
 ├── profiles/              # Pre-composed module sets per tier
 │   ├── tier-a.md
 │   ├── tier-b-research.md
@@ -124,7 +133,7 @@ git commit -m "Update ai-instructions"
 | Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?            |
 | -------------- | ------------------ | ---------------------- | ----------------------------- |
 | Claude Code    | Via `@AGENTS.md`   | Yes                    | `CLAUDE.md` with `@AGENTS.md` |
-| Gemini CLI     | Yes (auto)         | Yes                    | None                          |
+| Gemini CLI     | Yes (auto)         | Yes                    | `GEMINI.md` with `@AGENTS.md` |
 | OpenAI Codex   | Yes (primary)      | No                     | None                          |
 | GitHub Copilot | Yes (auto)         | No                     | None                          |
 | Cursor         | Yes (auto)         | No                     | None                          |

@@ -17,7 +17,7 @@ single file serves all AI coding tools.
 | Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?                       |
 | -------------- | ------------------ | ---------------------- | ---------------------------------------- |
 | Claude Code    | Via `@AGENTS.md`   | Yes (nested, max 5)    | `CLAUDE.md` containing just `@AGENTS.md` |
-| Gemini CLI     | Yes (auto)         | Yes                    | None                                     |
+| Gemini CLI     | Yes (auto)         | Yes                    | `GEMINI.md` containing just `@AGENTS.md` |
 | OpenAI Codex   | Yes (primary)      | No                     | None                                     |
 | GitHub Copilot | Yes (auto)         | No                     | None                                     |
 | Cursor         | Yes (auto)         | No                     | None                                     |
@@ -52,6 +52,15 @@ Project-specific structure and conventions.
 ### CLAUDE.md (project root)
 
 Only needed for Claude Code. Contains a single line:
+
+```
+@AGENTS.md
+```
+
+### GEMINI.md (project root)
+
+Ensures the Gemini CLI (and roborev reviews) picks up the shared coding standards.
+Contains a single line:
 
 ```
 @AGENTS.md
@@ -211,10 +220,6 @@ rules.ineffective-final = "error"
 rules.invalid-enum-member-annotation = "error"
 rules.invalid-ignore-comment = "error"
 rules.invalid-legacy-positional-parameter = "error"
-rules.possibly-missing-submodule = "error"
-rules.redundant-cast = "error"
-rules.unused-awaitable = "error"
-rules.unused-ignore-comment = "error"
 
 [tool.pytest]
 ini_options.addopts = [ "--pdbcls=pdbp:Pdb" ]
@@ -324,7 +329,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.19.0
+    rev: v2.20.0
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -370,7 +375,7 @@ repos:
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
+    rev: v0.15.7
     hooks:
       - id: ruff-check
         args:
@@ -427,7 +432,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
+    rev: v0.15.7
     hooks:
       - id: ruff-check
         args:
