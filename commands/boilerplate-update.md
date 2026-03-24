@@ -261,10 +261,10 @@ context. Do not reuse answers from previous runs. Each invocation is independent
     - `.github/workflows/` CI environment references
     - Any `Makefile` or scripts referencing old names
 
-12. **Run pre-commit.** After applying approved changes, run:
+12. **Run prek.** After applying approved changes, run:
 
     ```bash
-    pixi run pre-commit run --all-files
+    pixi run prek run --all-files
     ```
 
     If any hooks fail on files that don't exist or don't apply to this project (e.g., a
