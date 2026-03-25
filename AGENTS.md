@@ -333,3 +333,6 @@ Run these checks after making code changes. Skip any that don't apply to the pro
       was not properly stripped — run nbstripout before committing
    1. Make sure notebook cells are properly formatted (each line in a cell is a new json
       line, not one cell=one line).
+   1. Use actual UTF-8 characters everywhere — in markdown cells, Python strings, and
+      f-strings. Never write unicode escapes like `\u2014` or `\u03bc`; write `—` and
+      `μ` directly.
