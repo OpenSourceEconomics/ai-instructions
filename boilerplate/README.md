@@ -618,6 +618,7 @@ __pycache__/
 .pytask.sqlite3
 bld/
 out/
+pytask.lock
 pytask.lock.journal
 
 # Ruff
