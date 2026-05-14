@@ -188,6 +188,22 @@ Pixi is the required package and environment manager.
 - Never run `python script.py` without `pixi run` prefix
 - Never use the `defaults` conda channel
 
+### Always re-lock before committing — and especially before pushing
+
+**Whenever `pyproject.toml` changes in any way — a dependency added, removed, or
+version-bumped, a git/URL pin updated, an environment or feature edited — run
+`pixi lock` and commit the regenerated `pixi.lock` in the same commit.**
+
+A stale `pixi.lock` passes locally but breaks CI, and the failure surfaces *only* after
+you push:
+
+- `pixi install --frozen` / `pixi list --frozen` (the locked CI jobs) fail outright.
+- `pixi install` silently regenerates the lock and dirties the worktree, which blocks
+  any task that refuses to run on a dirty tree (e.g. benchmarks).
+
+So treat `pixi lock` as mandatory before `git commit`, and double-check it before
+`git push` — pushing a stale lock burns a full CI cycle to discover a one-line fix.
+
 ## Package Structure
 
 Use `src` layout:
@@ -258,20 +274,20 @@ def calculate_utility(consumption: float, gamma: float = 1.5) -> float:
 
 ## Docstring Style
 
-Docstrings and inline comments describe the code's *current* state in
-user-facing terms. The 9-month-without-PR-context reader is the
-audience: a docstring that survives that test stays useful; one that
-rehearses the diff or the prior implementation rots immediately.
+Docstrings and inline comments describe the code's *current* state in user-facing terms.
+The 9-month-without-PR-context reader is the audience: a docstring that survives that
+test stays useful; one that rehearses the diff or the prior implementation rots
+immediately.
 
-This applies to **all** docstrings and comments — source and tests.
-For tests specifically, see also the "Test docstrings — describe
-behavior, not history" subsection in the Testing section.
+This applies to **all** docstrings and comments — source and tests. For tests
+specifically, see also the "Test docstrings — describe behavior, not history" subsection
+in the Testing section.
 
 ### Describe state, not history
 
-State what is true now. Don't reference prior designs, removed code,
-or what was changed. Words like "earlier", "previously", "now",
-"formerly", "the old", "before the fix" are red flags.
+State what is true now. Don't reference prior designs, removed code, or what was
+changed. Words like "earlier", "previously", "now", "formerly", "the old", "before the
+fix" are red flags.
 
 ```python
 # Good — forward-looking constraint
@@ -297,12 +313,11 @@ class _DiagnosticRow:
 
 ### No PR numbers, no model-specific magic numbers
 
-PR references (`#334 removed the host stalls`, `the bug was fixed in
-#42`) rot as the codebase evolves and provide no useful signal to a
-reader who isn't already in context. Magic numbers tied to a specific
-model size or hardware (`~2 MB at production grid sizes`, `fits on a
-16 GB device`) imply a fixed scale that's only true on whichever
-model/box the comment was written against. State the qualitative
+PR references (`#334 removed the host stalls`, `the bug was fixed in #42`) rot as the
+codebase evolves and provide no useful signal to a reader who isn't already in context.
+Magic numbers tied to a specific model size or hardware
+(`~2 MB at production grid sizes`, `fits on a 16 GB device`) imply a fixed scale that's
+only true on whichever model/box the comment was written against. State the qualitative
 dependency instead.
 
 ```python
@@ -318,9 +333,9 @@ dependency instead.
 
 ### Bulleted lists for enumerated cases
 
-When describing a fixed set of cases (log levels, regime kinds,
-parameter types, dispatch strategies), use one bullet per case
-rather than running prose. Bullets scan; prose hides cases.
+When describing a fixed set of cases (log levels, regime kinds, parameter types,
+dispatch strategies), use one bullet per case rather than running prose. Bullets scan;
+prose hides cases.
 
 ```python
 # Good — scannable
@@ -373,37 +388,36 @@ def _fail_if_not_list(data: Any) -> None:
 
 ### Test-Driven Development — always
 
-**Always write the test first, watch it fail, then implement.** No
-exceptions for new behavior or bug fixes. Tests are not an afterthought,
-they are the spec.
+**Always write the test first, watch it fail, then implement.** No exceptions for new
+behavior or bug fixes. Tests are not an afterthought, they are the spec.
 
 The cycle:
 
-1. **Red.** Write a failing test that asserts the desired behavior in
-   user-facing terms. Run it. Confirm it fails for the *right* reason
-   (the missing behavior — not a typo, not an import error).
-2. **Green.** Write the smallest amount of code that makes the test pass.
-3. **Refactor.** Clean up while keeping the test green.
+1. **Red.** Write a failing test that asserts the desired behavior in user-facing terms.
+   Run it. Confirm it fails for the *right* reason (the missing behavior — not a typo,
+   not an import error).
+1. **Green.** Write the smallest amount of code that makes the test pass.
+1. **Refactor.** Clean up while keeping the test green.
 
 Apply per case:
 
 - **New feature** → red-green-refactor.
-- **Bug fix** → reproduce as a failing test before writing the fix. The
-  test then prevents regression.
-- **Refactor (no behavior change)** → existing tests are the spec. Keep
-  them green before, during, and after. No new test needed if behavior
-  is unchanged; if you find a behavior gap, fill it with a new test
-  *before* refactoring.
+- **Bug fix** → reproduce as a failing test before writing the fix. The test then
+  prevents regression.
+- **Refactor (no behavior change)** → existing tests are the spec. Keep them green
+  before, during, and after. No new test needed if behavior is unchanged; if you find a
+  behavior gap, fill it with a new test *before* refactoring.
 
 ### Test docstrings — describe behavior, not history
 
-Test docstrings state what *should* be true, in user-facing terms.
-Pretend the reader has never seen the PR. They should not need to.
+Test docstrings state what *should* be true, in user-facing terms. Pretend the reader
+has never seen the PR. They should not need to.
 
 ```python
 # Good — behavior, in plain language
 def test_simulate_with_chained_transitions_yields_expected_next_wealth():
     """`next_wealth_t = wealth_t - c_t + 0.1 * next_aime_t` holds in simulation."""
+
 
 # Bad — rehearses the prior bug or implementation history
 def test_solve_resolves_chain_via_dags():
@@ -412,8 +426,8 @@ def test_solve_resolves_chain_via_dags():
     `create_regime_params_template` classified ..."""
 ```
 
-Rule of thumb: **would the docstring still make sense in 9 months
-without the PR context?** If not, rewrite it.
+Rule of thumb: **would the docstring still make sense in 9 months without the PR
+context?** If not, rewrite it.
 
 ### Concrete-value assertions
 
@@ -428,8 +442,8 @@ assert not jnp.any(jnp.isnan(V_arr))
 assert df["wealth"].notna().all()
 ```
 
-`not isnan` and `no exception raised` belong in CI smoke tests, not in
-the unit tests for the feature itself.
+`not isnan` and `no exception raised` belong in CI smoke tests, not in the unit tests
+for the feature itself.
 
 ### Mechanics
 
@@ -465,6 +479,9 @@ x = some_call()  # type: ignore
 
 Run these checks after making code changes. Skip any that don't apply to the project.
 
+1. **Lockfile**: If `pyproject.toml` changed, run `pixi lock` and stage the updated
+   `pixi.lock`. Never commit or push a `pyproject.toml` change without re-locking — a
+   stale lock breaks CI (see "Always re-lock before committing").
 1. **Pre-commit**: Stage new files, then `pixi run prek run --all-files` (or
    `prek run --all-files` if globally installed). Fix any failures.
 1. **Tests**: `pixi run tests` (or the project's test task).
