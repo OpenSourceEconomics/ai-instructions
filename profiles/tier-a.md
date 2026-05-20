@@ -1,1 +1,1 @@
-@../AGENTS.md @../modules/numpy.md
+@../AGENTS.md @../modules/numpy.md @../modules/beartype.md
