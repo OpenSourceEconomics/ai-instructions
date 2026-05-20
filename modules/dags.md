@@ -86,7 +86,22 @@ adapted = rename_arguments(
 ```
 
 Use `with_signature` to set signatures programmatically on functions that lack them
-(e.g., lambdas wrapped in closures).
+(e.g., lambdas wrapped in closures). Passing the dict form of `args`/`kwargs` plus a
+`return_annotation` also stamps parameter and return *type annotations* onto the
+function—not just argument names—so a dynamically built DAG wrapper gets a fully typed,
+runtime-checkable signature:
+
+```python
+from dags import with_signature
+
+
+@with_signature(
+    args={"wages": "float", "hours": "float"},
+    return_annotation="float",
+)
+def labor_income(*args, **kwargs):
+    return args[0] * args[1]
+```
 
 ## JAX Compatibility
 
