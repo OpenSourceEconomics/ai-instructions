@@ -281,6 +281,47 @@ def vectorize_scalar(scalar_func):
 
 `__annotate__` is PEP 649's deferred-eval alias; strip it as well for 3.14+.
 
+## The claw binds decorator-produced callable instances
+
+A decorator that returns a **callable class instance** rather than a function — a frozen
+dataclass with a `__call__` that wraps the real function is the common case — trips the
+claw. The claw appends `@beartype` to the decorated `def`, and with the default
+(outermost) placement that becomes `beartype(Wrapper(raw_func))`. Given a
+pseudo-callable object, `beartype()` returns a *bound method* of its `__call__`, so the
+module-level name is no longer the `Wrapper` instance:
+
+```python
+@interface_function()  # returns an `InterfaceFunction` instance
+def num_segments(processed_data): ...
+
+
+# under the claw, `num_segments` is now
+# <bound method InterfaceFunction.__call__ of InterfaceFunction(...)>
+```
+
+`isinstance(num_segments, InterfaceFunction)` and every attribute access (`.leaf_name`,
+`.dependencies`) then fail. A *non-callable* wrapper — a pure metadata dataclass — is
+instead skipped with a `BeartypeClawDecorWarning`, leaving the instance intact; only
+callable wrappers are silently bound.
+
+`claw_decor_place_func=BeartypeDecorPlace.FIRST` runs `@beartype` on the raw function
+*before* the decorator wraps it, which avoids the binding — but beartype must then
+resolve the raw function's annotations, reintroducing every forward-ref /
+`from __future__ import annotations` problem, and if the wrappers feed a DAG library
+that compares annotations it can desync that comparison. Treat `FIRST` as a last resort.
+
+The remedy depends on how the wrapped objects are consumed:
+
+- **Consumed only via a claw-free loader** (e.g.
+  `importlib.util.spec_from_file_location`, which bypasses `sys.meta_path` and so the
+  claw) — the binding is harmless in production; it bites only code that imports the
+  module *normally*. Point such code (typically tests) at the claw-free loader too, so
+  it sees the same pristine instances the loader produces.
+- **Consumed via normal import in production** — exclude the offending modules from the
+  claw with `BeartypeConf(claw_skip_package_names=("pkg.subpkg",))` (skips that package
+  and all submodules transitively), or make the wrapper non-callable and hand the
+  consumer its `.function` attribute.
+
 ## CI integration
 
 Run the test suite with the claw on. Set the env var unconditionally on every test
