@@ -232,6 +232,10 @@ ______________________________________________________________________
 - Use `func`, not `fn`, when abbreviating "function" (e.g., `apply_func`)
 - Avoid: abbreviations, single letters (`n`, `c`, `s`, `u` conflict with debugger),
   built-in names (`list`, `dict`, `type`)
+- Avoid vague action nouns like "sweep", "pass", "handler" in identifiers, comments,
+  and docstrings unless paired with a concrete qualifier (e.g., "annotation-stripping
+  pass"). Prefer the verb form (`resolve_*`) or a specific noun (`resolver`,
+  `validator`) that says what the thing actually does.
 
 ## Module Layout
 
