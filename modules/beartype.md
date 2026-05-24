@@ -337,16 +337,41 @@ For the rollout PR, also surface the env var in CI matrix entries; run one matri
 with the claw off as a baseline. After the rollout PR merges, remove the env-var gate
 from `__init__.py` and the claw is on for everyone, always.
 
-## jaxtyping ellipsis-sentinel pickle patch
+## jaxtyping sentinel-cloudpickle fix (upstream)
 
-jaxtyping marks an anonymous variadic dim (`Foo[Array, "..."]`) with a module-level
-`object()` sentinel. A bare `object()` does not survive a pickle round-trip, so any
-cloudpickled value whose annotations reference such a type fails jaxtyping's identity
-check on unpickle. Projects that pickle DAG-built functions (ttsim does, gettsim
-inherits) need a singleton replacement; see
-[`ttsim/_jaxtyping_patch.py`](../../src/ttsim/_jaxtyping_patch.py) for the
-`__reduce__`-backed singleton and import it before any jaxtyping-subscripted type is
-created.
+jaxtyping's three module-level `object()` sentinels (`_any_dtype`, `_anonymous_dim`,
+`_anonymous_variadic_dim`) do not survive a `cloudpickle` round-trip — the receiving
+side gets fresh `object()` instances that no longer match the live module-global, so
+identity-based shape checks on cloudpickled jaxtyping types fail. Projects that pickle
+DAG-built functions (ttsim does, gettsim and pylcm inherit) hit this whenever the DAG's
+annotations reference a jaxtyping type.
+
+Resolved upstream in `jaxtyping >= 0.3.10`
+([patrick-kidger/jaxtyping#390](https://github.com/patrick-kidger/jaxtyping/pull/390))
+by replacing all three sentinels with `__reduce__`-backed singleton classes. Until the
+release is on PyPI, depend on the fork via a pixi pypi-dependency override:
+
+```toml
+[tool.pixi.pypi-dependencies]
+jaxtyping = { git = "https://github.com/hmgaudecker/jaxtyping", branch = "fix/sentinel-cloudpickle" }
+```
+
+Pair the override with `jaxtyping>=0.3.10` in `[project].dependencies` so consumers
+installing the released wheel get the same floor. Drop the override once the release
+lands.
+
+## jaxtyping `Ellipsis` shim (under `from __future__ import annotations`)
+
+Projects supporting Python < 3.14 keep `from __future__ import annotations` (PEP 563).
+Under that import, an annotation like `Int[Array, ...]` is stored as the source string
+`"Int[Array, ...]"`; runtime consumers (beartype, jaxtyping) `eval` it back, producing
+`Int[Array, Ellipsis]`. jaxtyping's subscript handler then calls `dim_str.strip()` and
+dies with `AttributeError` because `Ellipsis` is not a string. The shim coerces a bare
+`Ellipsis` to `"..."` inside `_MetaAbstractDtype.__getitem__`; see
+[`ttsim/_jaxtyping_patch.py`](../../src/ttsim/_jaxtyping_patch.py). Import it before any
+jaxtyping-subscripted type is created. Projects on `requires-python >= 3.14` that have
+dropped `from __future__ import annotations` (and so receive real `Ellipsis` only via
+inline annotations they control) do not need this shim — pylcm is in that bucket.
 
 ## Ruff configuration
 
