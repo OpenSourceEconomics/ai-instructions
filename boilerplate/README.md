@@ -329,7 +329,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.21.1
+    rev: v2.24.1
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -371,11 +371,11 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.2
+    rev: 0.37.3
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.17
     hooks:
       - id: ruff-check
         args:
@@ -432,7 +432,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.17
     hooks:
       - id: ruff-check
         args:
