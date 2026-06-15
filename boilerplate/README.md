@@ -444,6 +444,94 @@ ci:
 
 ______________________________________________________________________
 
+## .github/workflows/main.yml
+
+Runs tests and type checking on every push to `main` and every pull request. Use the
+`.yml` extension (not `.yaml`), matching GitHub's own convention. Pin every action and
+the `pixi-version`, and refresh them with the steps under *CI / ReadTheDocs references*
+above.
+
+### Tier A/B: Full Configuration
+
+The matrix below targets a single Python version (3.14). Libraries that support older
+versions add `py311`, `py312`, `py313` to the `environment` list.
+
+```yaml
+---
+name: main
+# Automatically cancel a previous run.
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  run-tests:
+    name: Run tests for ${{ matrix.os }} on ${{ matrix.environment }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        environment:
+          - py314
+    steps:
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.2
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          frozen: true
+          environments: ${{ matrix.environment }}
+      - name: Run tests without coverage
+        if: ${{ !(runner.os == 'Linux' && matrix.environment == 'py314') }}
+        run: pixi run --locked -e ${{ matrix.environment }} tests
+        shell: bash -el {0}
+      - name: Run tests with coverage
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        run: pixi run --locked tests-with-cov
+        shell: bash -el {0}
+      - name: Upload coverage reports
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        uses: codecov/codecov-action@v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  run-ty:
+    name: Run ty
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.2
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          frozen: true
+          environments: py314
+      - name: Run ty
+        run: pixi run --locked -e py314 ty
+        shell: bash -el {0}
+```
+
+Projects with multiple test environments move `ty` to a dedicated `type-checking`
+environment (see *Tasks* above) and run it there instead of in `py314`.
+
+### Tier C: Minimal
+
+Minimal projects (documentation, LaTeX, notes) have no test suite and need no workflow —
+pre-commit.ci handles linting and formatting.
+
+______________________________________________________________________
+
 ## .yamllint.yml
 
 Use with all tiers that have prek.
