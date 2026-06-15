@@ -58,8 +58,8 @@ Pixi is the required package and environment manager.
 - Run everything through it: `pixi run python`, `pixi run pytest`, `pixi run pytask`.
 - Add deps with `pixi add` (conda-forge) or `pixi add --pypi` (PyPI-only); commit
   `pixi.lock` for reproducibility.
-- Never `pip install` / `conda install` directly, never run bare `python script.py`,
-  never use the `defaults` conda channel.
+- Never use `pip`, `conda`, or `uv` directly, never run bare `python script.py`, never
+  use the `defaults` conda channel.
 
 ### Always re-lock before committing — and especially before pushing
 
@@ -342,7 +342,6 @@ Use **ty** (not mypy, not pyright). ty runs as a pre-commit hook
 ([`astral-sh/ty-pre-commit`](https://github.com/astral-sh/ty-pre-commit)) — part of
 `prek run --all-files` — resolving third-party imports from the pixi environment named
 in `[tool.ty] environment.python`. Run `pixi install` once so that environment exists.
-Projects with a JAX backend add a second `ty-jax` hook checking against the JAX env.
 
 - Suppress with `# ty: ignore[rule-name]` (never `# type: ignore`); always name the
   rule.
@@ -355,8 +354,8 @@ Run these checks after making code changes. Skip any that don't apply to the pro
    `pixi.lock`. Never commit or push a `pyproject.toml` change without re-locking — a
    stale lock breaks CI (see "Always re-lock before committing").
 1. **Pre-commit (incl. type checking)**: Stage new files, then `prek run --all-files`
-   (or `pixi run prek run --all-files`). This runs ruff, formatting, and the `ty` /
-   `ty-jax` hooks. Fix any failures.
+   (or `pixi run prek run --all-files`). This runs ruff, formatting, and the `ty` hook.
+   Fix any failures.
 1. **Tests**: `pixi run tests` (or the project's test task).
 1. **Notebook diffs**: If `.ipynb` files changed
    1. verify the diff looks like clean cell-content changes, not JSON noise (cell
