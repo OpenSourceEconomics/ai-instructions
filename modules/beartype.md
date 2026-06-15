@@ -2,9 +2,9 @@
 
 Runtime type checking with **beartype**, combined with shape-tagged array types from
 **jaxtyping**, gives a project a single source of truth: the annotations on a function
-are also its runtime contract. The patterns below describe the OSE-ecosystem rollout —
-package-wide claw, per-component exception hierarchy, wide/narrow type split at user
-boundaries — as deployed in `ttsim`, `gettsim`, `gettsim-personas`, and `pylcm`.
+are also its runtime contract. The patterns below describe the OSE-ecosystem deployment
+— package-wide claw, per-component exception hierarchy, wide/narrow type split at user
+boundaries — as used in `ttsim`, `gettsim`, `gettsim-personas`, and `pylcm`.
 
 ## When to use beartype
 
@@ -49,9 +49,9 @@ if os.environ.get("PROJECT_BEARTYPE_CLAW", "0") != "0":
 ```
 
 The env-var gate (`TTSIM_BEARTYPE_CLAW`, `GETTSIM_BEARTYPE_CLAW`,
-`GETTSIM_PERSONAS_BEARTYPE_CLAW`, `LCM_BEARTYPE_CLAW`, …) is for the rollout PR only:
-collaborators can run the test suite with the claw off while the new violations get
-triaged. After the rollout PR merges, drop the gate and call `beartype_package`
+`GETTSIM_PERSONAS_BEARTYPE_CLAW`, `LCM_BEARTYPE_CLAW`, …) lets collaborators run the
+test suite with the claw off while new violations are triaged during adoption. Once a
+package has fully adopted the claw, drop the gate and call `beartype_package`
 unconditionally.
 
 For projects with a split public/private layout (`gettsim_personas` +
@@ -333,9 +333,9 @@ environment so the claw stays on even when the user types `pixi run tests` local
 TTSIM_BEARTYPE_CLAW = "1"
 ```
 
-For the rollout PR, also surface the env var in CI matrix entries; run one matrix job
-with the claw off as a baseline. After the rollout PR merges, remove the env-var gate
-from `__init__.py` and the claw is on for everyone, always.
+While a package is still adopting the claw, surface the env var in CI matrix entries and
+run one matrix job with the claw off as a baseline. Once adoption is complete, remove
+the env-var gate from `__init__.py` so the claw is on for everyone, always.
 
 ## jaxtyping sentinel-cloudpickle fix (upstream)
 

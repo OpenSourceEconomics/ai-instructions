@@ -42,7 +42,7 @@ Brief project description.
 
 - `pixi run pytest` — run tests
 - `pixi run pytask` — run task pipeline
-- `pixi run ty` — type checking
+- `prek run --all-files` — lint, format, and type-check (ty runs as a pre-commit hook)
 
 ## Architecture
 
@@ -104,21 +104,19 @@ based on what the project actually contains.
 ### Environments
 
 Environments should be from the set:
-`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs, type-checking}`
+`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
 
 Can be combined like: `py314-jax`, `tests-cuda13`
 
 ### Tasks
 
 Tasks should be from the set:
-`{tests, tests-with-cov, tests-jax, ty, build-docs, view-docs, view-paper, view-pres, ...}`
+`{tests, tests-with-cov, tests-jax, build-docs, view-docs, view-paper, view-pres, ...}`
 
-- `ty` task should run `ty check`
-- For projects with a single test environment, include `ty` in `feature.tests` (not as a
-  separate environment and not in the general pypi dependencies)
-- For projects with multiple test environments (e.g. `tests-cpu`, `tests-cuda`), move
-  `ty` to a separate `feature.type-checking` and add a dedicated `type-checking`
-  environment that includes only that feature, so `pixi run ty` resolves unambiguously
+Type checking is **not** a pixi task — ty runs as a pre-commit hook (see
+`.pre-commit-config.yaml`). It resolves third-party imports from the pixi environment
+named in `[tool.ty] environment.python`, so run `pixi install` once. Projects with a JAX
+backend add a second `ty-jax` hook that checks against the JAX environment.
 
 ### CI / ReadTheDocs references
 
@@ -210,6 +208,10 @@ lint.per-file-ignores."tests/*" = [
 lint.pydocstyle.convention = "google"
 
 [tool.ty]
+# ty resolves third-party imports from this pixi env (the official ty-pre-commit hook
+# runs `uv check --no-project`, so uv neither creates a `.venv` nor resolves deps). Run
+# `pixi install` once. The `ty-jax` hook overrides this path on the command line.
+environment.python = ".pixi/envs/py314"
 # Promote all warn/ignore-default rules to error.
 # Rules that default to error are omitted (already enforced).
 rules.ambiguous-protocol-member = "error"
@@ -263,12 +265,13 @@ project-name = { path = ".", editable = true }
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-ty = "*"
 
 [tool.pixi.feature.tests.tasks]
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
-ty = "ty check"
+
+[tool.pixi.environments]
+py314 = [ "tests" ]
 
 [tool.pixi.workspace]
 channels = [ "conda-forge" ]
@@ -389,6 +392,31 @@ repos:
           - jupyter
           - pyi
           - python
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.49
+    hooks:
+      - id: ty
+        name: ty (numpy backend)
+        # `--no-project` stops uv from creating a `.venv`/`uv.lock` in this
+        # pixi-managed repo; ty resolves third-party imports from the env named
+        # in `[tool.ty] environment.python` (run `pixi install` once).
+        args:
+          - --no-project
+  # JAX projects only: a second hook checking against the JAX env. The official
+  # hook's `uv check` cannot forward `--python`, so this is a local hook. Drop
+  # this `repo: local` block if the project has no JAX backend; keep the ty pin
+  # in sync with the rev above.
+  - repo: local
+    hooks:
+      - id: ty-jax
+        name: ty (jax backend)
+        language: python
+        additional_dependencies:
+          - ty==0.0.49
+        entry: ty check --python .pixi/envs/py314-jax
+        pass_filenames: false
+        always_run: true
+        require_serial: true
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:
@@ -412,6 +440,12 @@ repos:
         files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
 ci:
   autoupdate_schedule: monthly
+  # pre-commit.ci has no pixi environments and blocks network at hook runtime;
+  # the GitHub Actions `run-ty` job covers type checking. (Drop `ty-jax` here if
+  # the project has no JAX backend.)
+  skip:
+    - ty
+    - ty-jax
 ```
 
 ### Tier C: Minimal Configuration
@@ -518,12 +552,12 @@ jobs:
           frozen: true
           environments: py314
       - name: Run ty
-        run: pixi run --locked -e py314 ty
+        run: pixi run --locked -e py314 prek run ty --all-files
         shell: bash -el {0}
 ```
 
-Projects with multiple test environments move `ty` to a dedicated `type-checking`
-environment (see *Tasks* above) and run it there instead of in `py314`.
+JAX projects add `py314-jax` to the job's `environments:` and a second
+`pixi run --locked -e py314 prek run ty-jax --all-files` step.
 
 ### Tier C: Minimal
 

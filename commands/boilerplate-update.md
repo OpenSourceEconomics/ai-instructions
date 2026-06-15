@@ -148,8 +148,8 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - **Configuration gaps**: missing ruff rules, ty config, etc.
    - **Structural issues**: wrong build backend, missing hatch-vcs, etc.
    - **Pixi environment names**: should follow the standard set
-     (`py3XX`, `numpy`, `jax`, `cpu`, `cuda`, `cuda12`, `cuda13`, `tests`, `docs`,
-     `type-checking`), combined like `py314-jax`, `tests-cuda13`. Flag non-standard
+     (`py3XX`, `numpy`, `jax`, `cpu`, `cuda`, `cuda12`, `cuda13`, `tests`, `docs`),
+     combined like `py314-jax`, `tests-cuda13`. Flag non-standard
      names (e.g., `test-cpu` should be `tests-cpu`, `default` should be `py3XX`).
    - **nbstripout kernelspec**: Check if `pyproject.toml` has `jupyter-book` or `mystmd`
      as a dependency anywhere (including `[project.dependencies]`,
@@ -206,9 +206,11 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - **jaxtyping F722**: If the project uses `jaxtyping` (check dependencies), ensure
      `"F722"` is in `extend-ignore` with comment linking to the jaxtyping FAQ.
    - **Pixi task names**: should follow the standard set
-     (`tests`, `tests-with-cov`, `tests-jax`, `ty`, `build-docs`, `view-docs`,
-     `view-paper`, `view-pres`). The `ty` task should run `ty check`. Flag non-standard
-     names.
+     (`tests`, `tests-with-cov`, `tests-jax`, `build-docs`, `view-docs`,
+     `view-paper`, `view-pres`). Type checking is **not** a pixi task — ty runs as the
+     `ty` / `ty-jax` pre-commit hooks (`astral-sh/ty-pre-commit` plus a local jax hook),
+     resolving imports from `[tool.ty] environment.python`. Flag non-standard names, a
+     leftover `ty` / `type-checking` pixi task or environment, and a missing ty hook.
 
 8. **Generate or update AGENTS.md.** If the user selected it in step 4, generate or update the
    project's `AGENTS.md`. Structure:

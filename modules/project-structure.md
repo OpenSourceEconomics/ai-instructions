@@ -1,55 +1,35 @@
 # Project Structure
 
-## Directory Layout
+Research projects follow the EPP layout:
 
 ```
-my_project/
-├── src/my_project/
-│   ├── config.py
-│   ├── original_data/
-│   ├── data_management/
-│   ├── analysis/
-│   └── final/
-├── bld/           # Generated outputs (gitignored)
-├── tests/
-└── pyproject.toml
+src/<project>/
+├── config.py           # defines SRC / BLD paths
+├── original_data/
+├── data_management/
+├── analysis/
+└── final/
+bld/                     # generated outputs, gitignored
+tests/
+pyproject.toml
 ```
 
-## Config File
+`config.py` derives paths from `__file__`:
 
 ```python
-# src/my_project/config.py
 from pathlib import Path
 
 SRC = Path(__file__).parent.resolve()
 BLD = SRC.joinpath("..", "..", "bld").resolve()
 ```
 
-## AI Agent Instructions
+Keep raw data and code in version control, put every generated file in `bld/`, and never
+rely on manual execution order — let pytask resolve dependencies.
 
-Every project should have a `GEMINI.md` file at the repo root that references
-`AGENTS.md` using the `@` include syntax, mirroring what `CLAUDE.md` does. This ensures
-the Gemini CLI (used by roborev for code reviews) picks up the same coding standards.
+## AI agent instruction files
 
-```
-# GEMINI.md
-@AGENTS.md
-```
-
-If `AGENTS.md` is not at the repo root (e.g., in a parent directory or submodule),
-adjust the path accordingly:
-
-```
-# GEMINI.md — when AGENTS.md is in a parent directory
-@../AGENTS.md
-
-# GEMINI.md — when using submodule @-references directly
-@.ai-instructions/profiles/tier-a.md @.ai-instructions/modules/jax.md
-```
-
-## Reproducibility
-
-- Include all source data and code
-- Keep raw data and code in version control
-- Put generated files in `bld/` (gitignored)
-- Never rely on manual execution order
+Each project root has `AGENTS.md` (the content) plus thin `CLAUDE.md` and `GEMINI.md`
+wrappers, each containing only `@AGENTS.md`. The `GEMINI.md` is what lets the Gemini CLI
+— and roborev code reviews — pick up the shared standards. When `AGENTS.md` lives in a
+parent directory or submodule, adjust the include path accordingly (e.g.
+`@../AGENTS.md`).

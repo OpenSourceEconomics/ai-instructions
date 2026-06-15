@@ -1,31 +1,20 @@
 # Pandas
 
-## Configuration
+Requires **pandas >= 3.0** — Copy-on-Write and string inference are always on, so no
+`pd.options` setup is needed. Read CSVs with `engine="pyarrow"`. Never use the
+deprecated `inplace` argument. (Routine practice — `.loc` over `.iloc`, `.query` for
+filters, no `iterrows` / row-wise `apply` — is assumed.)
 
-Requires **pandas >= 3.0**. Copy-on-Write and string inference are always enabled by
-default — no `pd.options` settings needed.
+## File formats
 
-## Key Practices
+- `.pkl` — intermediate files, not shared
+- `.arrow` — files to share
+- `.dta` — avoid unless sharing with Stata
 
-- Use `engine="pyarrow"` when reading CSV
-- Never use `inplace` argument (deprecated)
-- Use `.loc` for label-based selection, avoid `.iloc`
-- Use `.query()` for readable filtering
-- Never loop over rows (`iterrows`, row-wise `apply`)
+## Functional data cleaning
 
-## File Formats
-
-- `.pkl` for intermediate files (not shared)
-- `.arrow` for files to share
-- Avoid `.dta` unless sharing with Stata
-
-## Functional Data Cleaning
-
-Always follow these rules:
-
-1. Start with empty DataFrame
-1. Touch each variable once
-1. Use pure functions for each transformation
+Build the result column-by-column from an empty frame, touch each variable once, and use
+one pure function per transformation:
 
 ```python
 def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
@@ -35,14 +24,9 @@ def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
     return df
 ```
 
-Do all data management in a collection of tables satisfying these rules (normal forms):
+Keep tables in normal form — atomic values, no redundancy, long not wide. Reshape and
+merge only at the end, always with explicit keys and an explicit join type:
 
-- Values have no internal structure
-- Tables do not contain redundant information
-- Variable names have no structure (long format, NOT wide format)
-
-## Merging
-
-- At the very end, merge / reshaping tables as needed for analysis
-- Always specify keys: `pd.merge(left, right, on=["key1", "key2"])` or index
-- Explicitly choose join type: `how="left"`
+```python
+pd.merge(left, right, on=["key1", "key2"], how="left")
+```

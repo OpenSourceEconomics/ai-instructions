@@ -1,11 +1,9 @@
-@modules/pandas.md @modules/numpy.md @modules/jax.md @modules/optimagic.md
-@modules/project-structure.md @modules/pytask.md @modules/plotting.md
-@modules/ml-econometrics.md @modules/dags.md
-
 # AI Coding Standards
 
 Guidelines for AI agents, mostly derived from
 [Effective Programming Practices for Economists](https://effective-programming-practices.vercel.app/).
+These capture *deltas from a capable agent's defaults* — ecosystem-specific tool choices
+and opinionated rules. Generic best practice a strong model already follows is omitted.
 
 ______________________________________________________________________
 
@@ -13,149 +11,33 @@ ______________________________________________________________________
 
 ## Type Hints
 
-**Always use type hints in all function signatures.** This is mandatory.
-
-```python
-def calculate_utility(consumption: float, gamma: float = 1.5) -> float:
-    return consumption ** (1 - gamma) / (1 - gamma)
-
-
-def clean_data(raw: pd.DataFrame) -> pd.DataFrame: ...
-
-
-def load_config(path: Path) -> dict[str, Any]: ...
-```
+Type hints are **mandatory** in every function signature.
 
 - Do NOT use `from __future__ import annotations` in Python 3.14+ projects — PEP 649
-  deferred evaluation makes it unnecessary and it changes runtime annotation semantics.
-  For projects supporting < 3.14, use it for forward references.
-- Prefer `X | None` over `Optional[X]` in Python 3.10+
-- Use `collections.abc` for abstract types: `Sequence`, `Mapping`, `Iterable`
+  deferred evaluation makes it unnecessary and changes runtime annotation semantics. For
+  projects supporting < 3.14, use it for forward references.
+- Prefer `X | None` over `Optional[X]`; use `collections.abc` (`Sequence`, `Mapping`,
+  `Iterable`) for abstract types.
 
 ## Immutability
 
-**Prefer immutable data structures throughout.** This prevents bugs and enables safer
-concurrent code.
+Prefer immutable data structures throughout.
 
-### Frozen Dataclasses
+- `@dataclass(frozen=True)` for all config/state objects, with PEP 257 inline field
+  docstrings (an `attr: int` line followed by its own `"""..."""` line).
+- `tuple` / `MappingProxyType` / `frozenset` over `list` / `dict` / `set`.
+- Create modified copies via `dataclasses.replace()` or `with_*` methods — never mutate.
+- `NewType` to distinguish same-typed domain values (`Period`, `Age`); `Enum` for
+  categorical values instead of string-literal or boolean flags.
 
-Use `@dataclass(frozen=True)` for all configuration and state objects:
+## File Paths & Numerics
 
-```python
-from dataclasses import dataclass, field
-from types import MappingProxyType
-
-
-@dataclass(frozen=True)
-class ModelConfig:
-    n_periods: int
-    """Number of time periods."""
-    n_states: int
-    """Number of discrete states per period."""
-    discount_factor: float = 0.95
-    """Subjective discount factor."""
-
-    @property
-    def n_total(self) -> int:
-        return self.n_periods * self.n_states
-```
-
-### Immutable Collections
-
-- Use `tuple` instead of `list` for sequences
-- Use `MappingProxyType` instead of `dict`
-- Use `frozenset` instead of `set`
-
-```python
-from types import MappingProxyType
-
-
-@dataclass(frozen=True)
-class Labels:
-    factors: tuple[str, ...]  # Not list[str]
-    mappings: MappingProxyType[str, int]  # Not dict[str, int]
-
-
-# For read-only dict views
-def ensure_immutable[K, V](d: dict[K, V]) -> MappingProxyType[K, V]:
-    return MappingProxyType(d)
-```
-
-### Immutable Update Pattern
-
-Use `with_*` methods or `dataclasses.replace()` to create modified copies:
-
-```python
-from dataclasses import replace
-
-
-@dataclass(frozen=True)
-class Config:
-    alpha: float
-    beta: float
-
-    def with_alpha(self, alpha: float) -> Self:
-        return replace(self, alpha=alpha)
-
-
-# Usage
-new_config = config.with_alpha(0.5)
-```
-
-### NewType for Domain Safety
-
-Use `NewType` to distinguish semantically different values of the same type:
-
-```python
-from typing import NewType
-
-Period = NewType("Period", int)
-Age = NewType("Age", int)
-
-
-def get_state(period: Period, age: Age) -> State: ...
-```
-
-### Enums for Categorical Values
-
-Use `Enum` instead of string literals or boolean flags:
-
-```python
-from enum import Enum, auto
-
-
-class FactorType(Enum):
-    STATE = auto()
-    ENDOGENOUS = auto()
-    CONTROL = auto()
-```
-
-## File Paths
-
-**Always use `pathlib.Path`** - never string paths.
-
-```python
-from pathlib import Path
-
-root = Path(__file__).parent.parent
-data_path = root / "datasets" / "data.csv"
-```
-
-Three rules:
-
-1. Always use `pathlib.Path` objects instead of strings
-1. Never hardcode absolute paths outside the project directory
-1. Concatenate paths with `/` operator
-
-## Floating Point Comparisons
-
-Never use `==` for floats. Use tolerance-based comparison:
-
-```python
-# With NumPy/JAX
-if np.isclose(result, 0.3):
-    ...
-```
+- **Paths:** always `pathlib.Path`, never strings; join with the `/` operator; no
+  hardcoded absolute paths outside the project.
+- **Float comparison:** never `==`; use `np.isclose` / `math.isclose` with an explicit
+  tolerance.
+- **Random numbers:** `np.random.default_rng(seed=...)`; never the legacy
+  `np.random.seed` / `np.random.rand` / `np.random.randn`.
 
 ______________________________________________________________________
 
@@ -173,20 +55,11 @@ features freely, including:
 
 Pixi is the required package and environment manager.
 
-**DO:**
-
-- `pixi run python script.py` - execute Python scripts
-- `pixi run pytest` - run tests
-- `pixi run pytask` - run task pipeline
-- `pixi add <package>` - add conda-forge dependencies
-- `pixi add --pypi <package>` - add PyPI-only packages
-- Commit `pixi.lock` for reproducibility
-
-**DON'T:**
-
-- Never use `pip install` or `conda install` directly
-- Never run `python script.py` without `pixi run` prefix
-- Never use the `defaults` conda channel
+- Run everything through it: `pixi run python`, `pixi run pytest`, `pixi run pytask`.
+- Add deps with `pixi add` (conda-forge) or `pixi add --pypi` (PyPI-only); commit
+  `pixi.lock` for reproducibility.
+- Never `pip install` / `conda install` directly, never run bare `python script.py`,
+  never use the `defaults` conda channel.
 
 ### Always re-lock before committing — and especially before pushing
 
@@ -465,19 +338,14 @@ def test_clean_scale_raises_on_invalid(invalid_input: Any) -> None:
 
 ## Type Checking
 
-Use **ty** (not mypy, not pyright) for type checking.
+Use **ty** (not mypy, not pyright). ty runs as a pre-commit hook
+([`astral-sh/ty-pre-commit`](https://github.com/astral-sh/ty-pre-commit)) — part of
+`prek run --all-files` — resolving third-party imports from the pixi environment named
+in `[tool.ty] environment.python`. Run `pixi install` once so that environment exists.
+Projects with a JAX backend add a second `ty-jax` hook checking against the JAX env.
 
-- Run via `pixi run ty`
-- Suppress errors with `# ty: ignore[rule-name]` (not `# type: ignore`)
-- Always specify the rule name in ignore comments
-
-```python
-# Good
-x = some_call()  # ty: ignore[unresolved-reference]
-
-# Bad - don't use type: ignore
-x = some_call()  # type: ignore
-```
+- Suppress with `# ty: ignore[rule-name]` (never `# type: ignore`); always name the
+  rule.
 
 ## Verification After Changes
 
@@ -486,10 +354,10 @@ Run these checks after making code changes. Skip any that don't apply to the pro
 1. **Lockfile**: If `pyproject.toml` changed, run `pixi lock` and stage the updated
    `pixi.lock`. Never commit or push a `pyproject.toml` change without re-locking — a
    stale lock breaks CI (see "Always re-lock before committing").
-1. **Pre-commit**: Stage new files, then `pixi run prek run --all-files` (or
-   `prek run --all-files` if globally installed). Fix any failures.
+1. **Pre-commit (incl. type checking)**: Stage new files, then `prek run --all-files`
+   (or `pixi run prek run --all-files`). This runs ruff, formatting, and the `ty` /
+   `ty-jax` hooks. Fix any failures.
 1. **Tests**: `pixi run tests` (or the project's test task).
-1. **Type checking**: `pixi run ty`.
 1. **Notebook diffs**: If `.ipynb` files changed
    1. verify the diff looks like clean cell-content changes, not JSON noise (cell
       metadata, execution counts, output blobs). If the diff is bloated, the notebook
@@ -497,5 +365,5 @@ Run these checks after making code changes. Skip any that don't apply to the pro
    1. Make sure notebook cells are properly formatted (each line in a cell is a new json
       line, not one cell=one line).
    1. Use actual UTF-8 characters everywhere — in markdown cells, Python strings, and
-      f-strings. Never write unicode escapes like `\u2014` or `\u03bc`; write `—` and
-      `μ` directly.
+      f-strings. Never write unicode escape sequences; write the actual characters (`—`,
+      `μ`) directly.
