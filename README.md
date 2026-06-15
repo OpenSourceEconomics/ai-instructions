@@ -69,14 +69,14 @@ ln -s /path/to/ai-instructions/commands/*.md ~/.claude/commands/
 
 ## Project Tiers
 
-| Tier             | Profile              | Description                            | Included modules                                          |
-| ---------------- | -------------------- | -------------------------------------- | --------------------------------------------------------- |
-| **A**            | `tier-a.md`          | Installable packages, complex research | core + numpy                                              |
-| **B (research)** | `tier-b-research.md` | Research with pytask, data processing  | core + pandas, numpy, project-structure, pytask, plotting |
-| **B (course)**   | `tier-b-course.md`   | Courses with notebooks                 | core + pandas, numpy, plotting, ml-econometrics           |
-| **C**            | `tier-c.md`          | Documentation, LaTeX, minimal projects | core only                                                 |
+| Tier             | Profile              | Description                            | Included modules                                   |
+| ---------------- | -------------------- | -------------------------------------- | -------------------------------------------------- |
+| **A**            | `tier-a.md`          | Installable packages, complex research | core + beartype                                    |
+| **B (research)** | `tier-b-research.md` | Research with pytask, data processing  | core + pandas, project-structure, pytask, plotting |
+| **B (course)**   | `tier-b-course.md`   | Courses with notebooks                 | core + pandas, plotting                            |
+| **C**            | `tier-c.md`          | Documentation, LaTeX, minimal projects | core only                                          |
 
-JAX and optimagic cross-cut tiers — add them individually alongside your profile.
+JAX, optimagic, and dags cross-cut tiers — add them individually alongside your profile.
 
 ## Structure
 
@@ -85,14 +85,13 @@ ai-instructions/
 ├── AGENTS.md              # Universal core (type hints, immutability, pixi, code quality)
 ├── modules/               # Topic-specific standards
 │   ├── pandas.md
-│   ├── numpy.md
 │   ├── jax.md
 │   ├── optimagic.md
 │   ├── project-structure.md
 │   ├── pytask.md
 │   ├── plotting.md
-│   ├── ml-econometrics.md
-│   └── dags.md
+│   ├── dags.md
+│   └── beartype.md
 ├── profiles/              # Pre-composed module sets per tier
 │   ├── tier-a.md
 │   ├── tier-b-research.md

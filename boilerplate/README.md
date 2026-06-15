@@ -42,7 +42,7 @@ Brief project description.
 
 - `pixi run pytest` — run tests
 - `pixi run pytask` — run task pipeline
-- `pixi run ty` — type checking
+- `prek run --all-files` — lint, format, and type-check (ty runs as a pre-commit hook)
 
 ## Architecture
 
@@ -104,21 +104,18 @@ based on what the project actually contains.
 ### Environments
 
 Environments should be from the set:
-`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs, type-checking}`
+`{py3XX, numpy, jax, cpu, cuda, cuda12, cuda13, tests, docs}`
 
 Can be combined like: `py314-jax`, `tests-cuda13`
 
 ### Tasks
 
 Tasks should be from the set:
-`{tests, tests-with-cov, tests-jax, ty, build-docs, view-docs, view-paper, view-pres, ...}`
+`{tests, tests-with-cov, tests-jax, build-docs, view-docs, view-paper, view-pres, ...}`
 
-- `ty` task should run `ty check`
-- For projects with a single test environment, include `ty` in `feature.tests` (not as a
-  separate environment and not in the general pypi dependencies)
-- For projects with multiple test environments (e.g. `tests-cpu`, `tests-cuda`), move
-  `ty` to a separate `feature.type-checking` and add a dedicated `type-checking`
-  environment that includes only that feature, so `pixi run ty` resolves unambiguously
+Type checking is **not** a pixi task — ty runs as a pre-commit hook (see
+`.pre-commit-config.yaml`). It resolves third-party imports from the pixi environment
+named in `[tool.ty] environment.python`, so run `pixi install` once.
 
 ### CI / ReadTheDocs references
 
@@ -210,6 +207,10 @@ lint.per-file-ignores."tests/*" = [
 lint.pydocstyle.convention = "google"
 
 [tool.ty]
+# ty resolves third-party imports from this pixi env (the official ty-pre-commit hook
+# runs `uv check --no-project`, so uv neither creates a `.venv` nor resolves deps). Run
+# `pixi install` once.
+environment.python = ".pixi/envs/py314"
 # Promote all warn/ignore-default rules to error.
 # Rules that default to error are omitted (already enforced).
 rules.ambiguous-protocol-member = "error"
@@ -263,12 +264,13 @@ project-name = { path = ".", editable = true }
 pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
-ty = "*"
 
 [tool.pixi.feature.tests.tasks]
 tests = "pytest"
 tests-with-cov = "pytest --cov-report=xml --cov=./"
-ty = "ty check"
+
+[tool.pixi.environments]
+py314 = [ "tests" ]
 
 [tool.pixi.workspace]
 channels = [ "conda-forge" ]
@@ -329,7 +331,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.21.1
+    rev: v2.24.1
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -371,11 +373,11 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.2
+    rev: 0.37.3
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.17
     hooks:
       - id: ruff-check
         args:
@@ -389,6 +391,15 @@ repos:
           - jupyter
           - pyi
           - python
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.49
+    hooks:
+      - id: ty
+        # `--no-project` stops uv from creating a `.venv`/`uv.lock` in this
+        # pixi-managed repo; ty resolves third-party imports from the env named
+        # in `[tool.ty] environment.python` (run `pixi install` once).
+        args:
+          - --no-project
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:
@@ -412,6 +423,10 @@ repos:
         files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
 ci:
   autoupdate_schedule: monthly
+  # pre-commit.ci has no pixi environments and blocks network at hook runtime;
+  # the GitHub Actions `run-ty` job covers type checking.
+  skip:
+    - ty
 ```
 
 ### Tier C: Minimal Configuration
@@ -432,7 +447,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.17
     hooks:
       - id: ruff-check
         args:
@@ -441,6 +456,91 @@ repos:
 ci:
   autoupdate_schedule: monthly
 ```
+
+______________________________________________________________________
+
+## .github/workflows/main.yml
+
+Runs tests and type checking on every push to `main` and every pull request. Use the
+`.yml` extension (not `.yaml`), matching GitHub's own convention. Pin every action and
+the `pixi-version`, and refresh them with the steps under *CI / ReadTheDocs references*
+above.
+
+### Tier A/B: Full Configuration
+
+The matrix below targets a single Python version (3.14). Libraries that support older
+versions add `py311`, `py312`, `py313` to the `environment` list.
+
+```yaml
+---
+name: main
+# Automatically cancel a previous run.
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  run-tests:
+    name: Run tests for ${{ matrix.os }} on ${{ matrix.environment }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        environment:
+          - py314
+    steps:
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.2
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          frozen: true
+          environments: ${{ matrix.environment }}
+      - name: Run tests without coverage
+        if: ${{ !(runner.os == 'Linux' && matrix.environment == 'py314') }}
+        run: pixi run --locked -e ${{ matrix.environment }} tests
+        shell: bash -el {0}
+      - name: Run tests with coverage
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        run: pixi run --locked tests-with-cov
+        shell: bash -el {0}
+      - name: Upload coverage reports
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        uses: codecov/codecov-action@v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  run-ty:
+    name: Run ty
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.2
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          frozen: true
+          environments: py314
+      - name: Run ty
+        run: pixi run --locked -e py314 prek run ty --all-files
+        shell: bash -el {0}
+```
+
+### Tier C: Minimal
+
+Minimal projects (documentation, LaTeX, notes) have no test suite and need no workflow —
+pre-commit.ci handles linting and formatting.
 
 ______________________________________________________________________
 
