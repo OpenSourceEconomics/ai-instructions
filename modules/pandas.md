@@ -24,6 +24,18 @@ def clean_data(raw: pd.DataFrame) -> pd.DataFrame:
     return df
 ```
 
+Spell out every input column as a literal where its output is assigned — never an
+f-string or loop, and never by handing a helper the whole frame to reach into; a helper
+takes the specific Series it needs. This keeps provenance at the assignment site, and
+grep-able: `out["y"] = f(df)` hides which columns feed `y`. A dynamic `df[f"x_{i}"]`
+also silently skips a missing column, and any tool that selects inputs by scanning a
+function for literal subscripts drops the reference entirely.
+
+```python
+# inputs visible at the assignment, not hidden behind _count_months(df)
+df["n_months"] = df[["m_1", "m_2"]].astype("boolean").fillna(value=False).sum(axis=1)
+```
+
 Keep tables in normal form — atomic values, no redundancy, long not wide. Reshape and
 merge only at the end, always with explicit keys and an explicit join type:
 
