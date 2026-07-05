@@ -77,6 +77,45 @@ you push:
 So treat `pixi lock` as mandatory before `git commit`, and double-check it before
 `git push` — pushing a stale lock burns a full CI cycle to discover a one-line fix.
 
+### Migrate feature `system-requirements` (cuda) via named platform variants
+
+pixi 0.72 deprecates feature-level `system-requirements = { cuda = "12" }` and its
+warning tells you to put the constraint on the platform as a **feature-level** inline
+table, `platforms = [{ platform = "linux-64", cuda = "12" }]`. **That feature-level form
+does not parse on 0.72** — `pixi lock` fails with `× expected a string, found table`
+(and `pixi info` will *not* catch it: it only echoes the host's own virtual packages, so
+the edit looks fine until you lock). The migration guide's example is a workspace-level
+one; the per-feature translation the warning implies is what's unsupported.
+
+The form that **does** work on 0.72: declare **named platform variants** at the
+workspace level and point each cuda feature at its variant by bare string.
+
+```toml
+[tool.pixi.workspace]
+platforms = [
+  "linux-64",
+  { name = "linux-64-cuda12", platform = "linux-64", cuda = "12" },
+  { name = "linux-64-cuda13", platform = "linux-64", cuda = "13" },
+]
+
+[tool.pixi.feature.cuda12]
+platforms = [ "linux-64-cuda12" ]              # bare string ref — parses
+# target selectors still key on the BASE platform, not the variant name:
+[tool.pixi.feature.cuda12.target.linux-64.pypi-dependencies]
+jax = { version = ">=0.9", extras = [ "cuda12" ] }
+```
+
+Verified properties (pixi 0.72): locks with **no warnings**; `target.linux-64` applies to
+the `linux-64-cuda12` variant; and because a variant shares the base conda subdir, the
+lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but resolve
+to the same `linux-64` packages (only the cuda features add the GPU wheels). Always
+confirm with `pixi lock`, never `pixi info`.
+
+A *separate*, real warning — "target selector `osx-arm64` does not match any of the
+platforms supported by the workspace" — means a feature references a platform not in
+`[tool.pixi.workspace].platforms`. That one is genuine: either add the platform to the
+workspace or drop the orphaned feature.
+
 ## Package Structure
 
 Use `src` layout:
