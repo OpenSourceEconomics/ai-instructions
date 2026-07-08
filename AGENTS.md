@@ -105,11 +105,11 @@ platforms = [ "linux-64-cuda12" ]              # bare string ref — parses
 jax = { version = ">=0.9", extras = [ "cuda12" ] }
 ```
 
-Verified properties (pixi 0.72): locks with **no warnings**; `target.linux-64` applies to
-the `linux-64-cuda12` variant; and because a variant shares the base conda subdir, the
-lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but resolve
-to the same `linux-64` packages (only the cuda features add the GPU wheels). Always
-confirm with `pixi lock`, never `pixi info`.
+Verified properties (pixi 0.72): locks with **no warnings**; `target.linux-64` applies
+to the `linux-64-cuda12` variant; and because a variant shares the base conda subdir,
+the lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but
+resolve to the same `linux-64` packages (only the cuda features add the GPU wheels).
+Always confirm with `pixi lock`, never `pixi info`.
 
 A *separate*, real warning — "target selector `osx-arm64` does not match any of the
 platforms supported by the workspace" — means a feature references a platform not in
