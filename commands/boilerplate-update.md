@@ -14,7 +14,13 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 ## Steps
 
 1. **Update .ai-instructions submodule.** Check if `.ai-instructions/` exists and is a
-   git submodule. If not, ask the user for the path to the ai-instructions repo.
+   git submodule. If not, add it as a submodule from
+   `https://github.com/OpenSourceEconomics/ai-instructions` (always this URL, HTTPS —
+   never ask the user for the path, this is the standing default):
+
+   ```bash
+   git submodule add https://github.com/OpenSourceEconomics/ai-instructions .ai-instructions
+   ```
 
    If it exists, run a **single** bash command to gather all info at once:
 
@@ -96,12 +102,9 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    Do not skip this step. Do not proceed until the user answers. Do not combine this
    question with any other question.
 
-5. **Read the boilerplate templates.** The reference templates are in:
-   - If `.ai-instructions/` exists: `.ai-instructions/boilerplate/README.md`
-   - Otherwise ask the user for the path to the ai-instructions repo
-
-   Read the full boilerplate README to understand the expected configuration for the
-   determined tier.
+5. **Read the boilerplate templates.** Step 1 guarantees `.ai-instructions/` exists by
+   now. Read `.ai-instructions/boilerplate/README.md` in full to understand the expected
+   configuration for the determined tier.
 
 6. **Read the project's current configuration.** Read these files:
    - `pyproject.toml`
