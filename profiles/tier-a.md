@@ -1,1 +1,1 @@
-@../AGENTS.md @../modules/beartype.md
+@../AGENTS.md @../modules/beartype.md @../modules/math.md

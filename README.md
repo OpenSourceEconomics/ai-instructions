@@ -69,14 +69,17 @@ ln -s /path/to/ai-instructions/commands/*.md ~/.claude/commands/
 
 ## Project Tiers
 
-| Tier             | Profile              | Description                            | Included modules                                   |
-| ---------------- | -------------------- | -------------------------------------- | -------------------------------------------------- |
-| **A**            | `tier-a.md`          | Installable packages, complex research | core + beartype                                    |
-| **B (research)** | `tier-b-research.md` | Research with pytask, data processing  | core + pandas, project-structure, pytask, plotting |
-| **B (course)**   | `tier-b-course.md`   | Courses with notebooks                 | core + pandas, plotting                            |
-| **C**            | `tier-c.md`          | Documentation, LaTeX, minimal projects | core only                                          |
+| Tier             | Profile              | Description                            | Included modules                                         |
+| ---------------- | -------------------- | -------------------------------------- | -------------------------------------------------------- |
+| **A**            | `tier-a.md`          | Installable packages, complex research | core + beartype, math                                    |
+| **B (research)** | `tier-b-research.md` | Research with pytask, data processing  | core + pandas, project-structure, pytask, plotting, math |
+| **B (course)**   | `tier-b-course.md`   | Courses with notebooks                 | core + pandas, plotting, math                            |
+| **C**            | `tier-c.md`          | Documentation, LaTeX, minimal projects | core only                                                |
 
-JAX, optimagic, and dags cross-cut tiers — add them individually alongside your profile.
+The math module (`modules/math.md`) is included by default in tiers A and B — it applies
+whenever a project implements equations, estimators, or numerical algorithms, not just
+JAX/optimagic-based ones. JAX, optimagic, and dags cross-cut tiers — add them
+individually alongside your profile.
 
 ## Structure
 
@@ -85,6 +88,7 @@ ai-instructions/
 ├── AGENTS.md              # Universal core (type hints, immutability, pixi, code quality)
 ├── modules/               # Topic-specific standards
 │   ├── pandas.md
+│   ├── math.md
 │   ├── jax.md
 │   ├── optimagic.md
 │   ├── project-structure.md
@@ -100,7 +104,10 @@ ai-instructions/
 ├── commands/              # Claude Code slash commands
 │   ├── boilerplate-update.md
 │   ├── verify-standards.md
-│   └── new-task.md
+│   ├── new-task.md
+│   ├── implement-math.md
+│   ├── repair-math-root-cause.md
+│   └── close-pro-audit.md
 └── boilerplate/           # Dev environment config templates
     └── README.md
 ```
@@ -109,11 +116,14 @@ ai-instructions/
 
 Available after symlinking `commands/` to `~/.claude/commands/`:
 
-| Command                   | Description                                                                                                            |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `/boilerplate-update`     | Compare project config against boilerplate templates, propose updates (hook versions, ruff rules, pixi env/task names) |
-| `/verify-standards`       | Audit Python code for coding standard compliance, produce deviation report                                             |
-| `/new-task <description>` | Generate a pytask task file with correct patterns (Annotated/Product, helper separation)                               |
+| Command                         | Description                                                                                                            |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `/boilerplate-update`           | Compare project config against boilerplate templates, propose updates (hook versions, ruff rules, pixi env/task names) |
+| `/verify-standards`             | Audit Python code for coding standard compliance, produce deviation report                                             |
+| `/new-task <description>`       | Generate a pytask task file with correct patterns (Annotated/Product, helper separation)                               |
+| `/implement-math <claim>`       | Implement a mathematical/statistical feature reference-first, per `modules/math.md`                                    |
+| `/repair-math-root-cause <bug>` | Repair a math/numerics root-cause defect class as one batch, per `modules/math.md`                                     |
+| `/close-pro-audit`              | Prepare and enforce closure for an external `pro-*-audit` skill finding                                                |
 
 ## Updating
 
