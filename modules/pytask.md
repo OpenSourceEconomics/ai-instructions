@@ -26,6 +26,11 @@ def task_clean_data(
 def _clean_data(raw: pd.DataFrame) -> pd.DataFrame: ...
 ```
 
+pytask creates the parent directory of every `Annotated[Path, Product]` output
+automatically before the task runs. Never call `.mkdir()` (or check `exists()`/pass
+`parents=True, exist_ok=True`) for it inside the task — that duplicates what the
+framework already guarantees.
+
 ## Return Annotation for Simple Outputs
 
 When the task's primary purpose is producing a single file:
@@ -67,3 +72,4 @@ def task_clean_data(
 - Use `Annotated[Path, Product]` for outputs
 - Keep tasks focused: read → compute (via helper) → write
 - Helper functions do the actual work (testable, pure)
+- Never call `.mkdir()` for a `Product` output's directory — pytask creates it

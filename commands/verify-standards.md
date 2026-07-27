@@ -68,6 +68,18 @@ AGENTS.md and its modules. Produce a deviation report.
 - **Legacy random**: Flag `np.random.seed()`, `np.random.rand()`, `np.random.randn()`,
   `np.random.random()`. Should use `np.random.default_rng()`.
 
+### Pytask (if applicable)
+
+- **Task/helper separation**: Flag `task_*` functions that read input files, compute
+  results, and write output files all in the same function body — the task should only
+  do I/O, with a pure `_`-prefixed helper doing the computation.
+- **Product annotation**: Flag output parameters not annotated with
+  `Annotated[Path, Product]`.
+- **Manual directory creation**: Flag `.mkdir()` (or `exists()` + `mkdir()`) calls on a
+  `Product`-annotated output path — pytask creates that directory automatically.
+- **Naming**: Flag task files not matching `task_*.py` or task functions not matching
+  `task_*`.
+
 ### Type Checking
 
 - **type: ignore**: Flag `# type: ignore` comments. Should use `# ty: ignore[rule-name]`.

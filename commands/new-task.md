@@ -15,6 +15,9 @@ Generate a pytask task file based on the user's description: **$ARGUMENTS**
    - Whether a `DataCatalog` is used (and its variable name)
    - Existing task files for naming/numbering conventions
 
+   If `.ai-instructions/modules/pytask.md` exists in this project, read it too — it is
+   the canonical source for the conventions below.
+
 2. **Determine inputs and outputs** from the user's description.
 
 3. **Generate the task file** following these patterns:
@@ -68,6 +71,8 @@ def task_<name>(
   write output). Helper function contains all logic and is pure.
 - **Type hints**: All function signatures must have full type annotations
 - **Annotated[Path, Product]**: Always use this for output parameters
+- **No manual `.mkdir()`**: pytask creates a `Product` output's parent directory
+  automatically — never create or check for it yourself inside the task
 - **Helper functions**: Prefix with `_`, make them pure (no I/O), make them testable
 - **One task per file** unless tasks are closely related
 - **Imports**: Use project's config module for paths, not hardcoded strings
