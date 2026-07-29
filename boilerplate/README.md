@@ -331,7 +331,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.24.1
+    rev: v2.26.0
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -373,11 +373,11 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.3
+    rev: 0.37.4
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.17
+    rev: v0.16.0
     hooks:
       - id: ruff-check
         args:
@@ -392,7 +392,7 @@ repos:
           - pyi
           - python
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.49
+    rev: v0.0.64
     hooks:
       - id: ty
         # `--no-project` stops uv from creating a `.venv`/`uv.lock` in this
@@ -447,7 +447,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.17
+    rev: v0.16.0
     hooks:
       - id: ruff-check
         args:
