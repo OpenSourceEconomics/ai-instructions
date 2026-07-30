@@ -127,9 +127,27 @@ When renaming tasks or environments, also update references in:
 
 To find the latest versions for GitHub Actions:
 
-1. Run `pixi self-update` and note the version
-1. Check https://github.com/prefix-dev/setup-pixi/tags for the latest setup-pixi version
+1. Run `pixi self-update`, then `pixi --version`
+1. Resolve the latest action versions from the releases API:
+   ```bash
+   gh api repos/prefix-dev/setup-pixi/releases --jq '.[0].tag_name'
+   gh api repos/actions/checkout/releases --jq '.[0].tag_name'
+   ```
 1. Update `pixi-version:` and `uses: prefix-dev/setup-pixi@` accordingly
+
+**`pixi-version:` must match the local pixi from step 1, not merely be recent.**
+`pixi.lock` is written by whatever pixi a developer runs; CI then validates it with the
+pinned binary. If local pixi is *newer* than the pin, CI is asking an older pixi to read
+a newer lock — and because pixi is largely forward-tolerant that usually works, so the
+mismatch goes unnoticed until a lock feature it cannot read appears. The reverse (CI
+newer than local) is safe, as pixi reads older lock formats. Keeping both at latest
+satisfies currency and compatibility at once.
+
+**The version numbers in the workflow blocks below are illustrative, not canonical.**
+They are refreshed by different commits than the pre-commit hook versions, so this file
+can be at `origin/main` while its CI block is weeks old, and a project is often *ahead*
+of it. Always resolve latest as above; never copy a version out of this README into a
+project, which can silently downgrade it.
 
 ______________________________________________________________________
 
@@ -499,10 +517,10 @@ jobs:
         environment:
           - py314
     steps:
-      - uses: actions/checkout@v6
-      - uses: prefix-dev/setup-pixi@v0.9.6
+      - uses: actions/checkout@v7.0.1
+      - uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.70.2
+          pixi-version: v0.75.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
@@ -524,10 +542,10 @@ jobs:
     name: Run ty
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: prefix-dev/setup-pixi@v0.9.6
+      - uses: actions/checkout@v7.0.1
+      - uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.70.2
+          pixi-version: v0.75.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
