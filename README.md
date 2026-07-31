@@ -108,8 +108,10 @@ ai-instructions/
 │   ├── implement-math.md
 │   ├── repair-math-root-cause.md
 │   └── close-pro-audit.md
-├── hooks/                 # Scripts invoked by downstream pre-commit configs
-│   └── fix_notebook_cell_source.py
+├── hooks/                 # Scripts invoked by downstream pre-commit configs and CI
+│   ├── check_pre_push_installed.py
+│   ├── fix_notebook_cell_source.py
+│   └── verify_bibliography.py
 └── boilerplate/           # Dev environment config templates
     └── README.md
 ```

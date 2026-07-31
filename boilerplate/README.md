@@ -456,6 +456,15 @@ repos:
           - tomli
   - repo: local
     hooks:
+      # Runs at pre-commit stage and fails if the config declares pre-push hooks
+      # that this clone never installed — otherwise they look active and silently
+      # never fire.
+      - id: pre-push-hooks-installed
+        name: pre-push hooks are installed in this clone
+        entry: .ai-instructions/hooks/check_pre_push_installed.py
+        language: script
+        pass_filenames: false
+        always_run: true
       # `--check` re-solves and compares without writing, so it cannot dirty the
       # worktree. pre-push, not pre-commit: a mid-branch commit may legitimately
       # lag the lock, but a push with a stale lock burns a CI cycle.
@@ -497,7 +506,8 @@ ci:
 ```
 
 The `pre-push` stage needs installing once per clone — `prek install -t pre-push`
-alongside the usual `prek install`. Without it the lock check silently never runs.
+alongside the usual `prek install`. The `pre-push-hooks-installed` hook above exists so
+that omission fails loudly on the next commit instead of going unnoticed.
 
 `no-hardcoded-user-paths` and `no-section-separator-comments` mechanize rules
 `AGENTS.md` already states in prose. They are near-free on actively developed projects
@@ -616,6 +626,85 @@ jobs:
 
 Minimal projects (documentation, LaTeX, notes) have no test suite and need no workflow —
 pre-commit.ci handles linting and formatting.
+
+______________________________________________________________________
+
+## .github/workflows/bibliography.yml
+
+For any repository containing `.bib` files, regardless of tier. Verifies that every DOI
+resolves and that the work it points to actually matches the entry's title, year, and
+first author — the failure mode that survives every formatter and every proofread,
+because the citation *looks* authoritative and the next author inherits it unchecked.
+
+This belongs in CI rather than pre-commit for two reasons: it needs network access, so a
+flaky connection must not be able to block a commit; and correctness here decays after
+merge, as DOIs are withdrawn, reassigned, or corrected. The monthly schedule catches
+that drift, which a commit-time check never would.
+
+`verify_bibliography.py` is standard-library only, so this job needs no pixi
+environment.
+
+```yaml
+---
+name: bibliography
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # A DOI can be withdrawn or corrected long after the PR that added it merged.
+    - cron: 0 6 1 * *
+jobs:
+  verify-citations:
+    name: Verify citations against CrossRef
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # `.ai-instructions` carries the verification script.
+          submodules: true
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Verify bibliography
+        env:
+          # CrossRef's polite pool: identified callers get better rate limits.
+          MAILTO: ${{ vars.CROSSREF_MAILTO }}
+        run: |
+          set -euo pipefail
+          mapfile -t BIB < <(git ls-files '*.bib')
+          if [ ${#BIB[@]} -eq 0 ]; then
+            echo "No .bib files tracked; nothing to verify."
+            exit 0
+          fi
+          python .ai-instructions/hooks/verify_bibliography.py \
+            --online --mailto "${MAILTO}" "${BIB[@]}"
+```
+
+Set the `CROSSREF_MAILTO` repository variable to a contact address. Without it CrossRef
+still answers, but from the throttled anonymous pool.
+
+Severity is deliberately asymmetric, so that only a definite contradiction can fail a
+build:
+
+- **Error** — a DOI that CrossRef does not know; a DOI whose title denotes a different
+  work; a year contradicting the registry by more than one; a duplicate citation key; an
+  entry with no title, year, author, or editor.
+- **Warning** — no DOI at all (the common case: DOI coverage in an economics
+  bibliography is routinely under 5%, so requiring one would make the check unusable), a
+  first author that disagrees, a missing venue field, or any network failure.
+
+Pass `--require-doi` for a curated bibliography where every entry should be resolvable,
+and `--warnings-as-errors` to tighten the gate once a repository is clean. Add
+`--cache .doi-cache.json` (with `actions/cache`) to avoid re-querying unchanged DOIs.
+
+Titles are compared after stripping LaTeX; a title that contains the other counts as
+agreement, since registries frequently store `Main Title` where the bibliography has
+`Main Title: Subtitle`.
 
 ______________________________________________________________________
 
