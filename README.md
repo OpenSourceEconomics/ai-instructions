@@ -125,6 +125,27 @@ Available after symlinking `commands/` to `~/.claude/commands/`:
 | `/repair-math-root-cause <bug>` | Repair a math/numerics root-cause defect class as one batch, per `modules/math.md`                                     |
 | `/close-pro-audit`              | Prepare and enforce closure for an external `pro-*-audit` skill finding                                                |
 
+## Maintenance
+
+This repo should not just grow. Every module and command here was written to close a gap
+in some model generation's default behavior; as models get stronger, some of those gaps
+close on their own, and the instruction becomes pure cost (context, attention) with no
+remaining benefit. This mirrors Anthropic's own practice for Claude Code's system prompt
+— rebuilt from scratch on each model release, with ~80% of Opus 5's predecessor prompt
+cut once the model no longer needed it.
+
+Periodically, e.g. on each new Claude generation, re-test a module by running a
+representative task with it removed and comparing against a run with it included.
+Modules whose absence produces no observable difference are candidates for trimming.
+Prioritize the newest, most elaborate additions first — they were written against a
+specific model's gaps and are least likely to have been re-validated since.
+
+This does not apply to house-specific conventions a model cannot infer regardless of
+capability — naming, docstring/comment style, pixi/prek tooling choices, or anything
+encoding a concrete bug workaround (`modules/beartype.md`) or an obscure library's API
+(`modules/dags.md`). Only prune content whose absence a stronger model can compensate
+for on its own.
+
 ## Updating
 
 To update the submodule in a downstream project:
