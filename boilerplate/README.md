@@ -249,6 +249,15 @@ ini_options.norecursedirs = [ "docs" ]
 ini_options.paths = [ "./src/project_name" ]
 ini_options.pdbcls = "pdbp:Pdb"
 
+# codespell does NOT flag standard econ/numerics jargon (crra, egm, endog, exog,
+# gmm, hessian, jacobian, heteroskedasticity, ...) — verified, so no entry is
+# needed for those. What it does trip on is short abbreviations that collide with
+# real words, and German text, where `ist`/`nd` and friends fire constantly.
+# Extend per project rather than dropping the hook.
+[tool.codespell]
+ignore-words-list = "fpr,ist,mape,nd,nin"
+skip = "*.lock,*.svg,*.bib,*.ipynb"
+
 [tool.pyproject-fmt]
 column_width = 88
 max_supported_python = "3.14"
@@ -395,7 +404,7 @@ repos:
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: v0.16.1
     hooks:
       - id: ruff-check
         args:
@@ -439,13 +448,61 @@ repos:
           - --wrap
           - "88"
         files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+  - repo: local
+    hooks:
+      # `--check` re-solves and compares without writing, so it cannot dirty the
+      # worktree. pre-push, not pre-commit: a mid-branch commit may legitimately
+      # lag the lock, but a push with a stale lock burns a CI cycle.
+      - id: pixi-lock-check
+        name: pixi.lock is in sync with the manifest
+        entry: pixi lock --check
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|pixi\.toml|pixi\.lock)$
+        stages:
+          - pre-push
+      - id: notebook-cell-source-format
+        name: notebook cell source is a JSON array of lines
+        entry: .ai-instructions/hooks/fix_notebook_cell_source.py
+        language: script
+        types:
+          - jupyter
+      - id: no-hardcoded-user-paths
+        name: no hardcoded user-specific absolute paths
+        language: pygrep
+        entry: (/home/[A-Za-z0-9_.-]+/|/Users/[A-Za-z0-9_.-]+/|[A-Za-z]:\\Users\\)
+        types_or:
+          - python
+          - toml
+      - id: no-section-separator-comments
+        name: no decorative section-separator comments
+        language: pygrep
+        entry: ^\s*#\s*[-=#_*]{10,}\s*$
+        types:
+          - python
 ci:
   autoupdate_schedule: monthly
   # pre-commit.ci has no pixi environments and blocks network at hook runtime;
-  # the GitHub Actions `run-ty` job covers type checking.
+  # the GitHub Actions `run-ty` job covers type checking, and pixi-lock-check
+  # needs a pixi binary that pre-commit.ci does not provide.
   skip:
     - ty
+    - pixi-lock-check
 ```
+
+The `pre-push` stage needs installing once per clone — `prek install -t pre-push`
+alongside the usual `prek install`. Without it the lock check silently never runs.
+
+`no-hardcoded-user-paths` and `no-section-separator-comments` mechanize rules
+`AGENTS.md` already states in prose. They are near-free on actively developed projects
+but can fire heavily on older code; add `exclude:` for legacy directories rather than
+dropping the hook.
 
 ### Tier C: Minimal Configuration
 
@@ -465,7 +522,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: v0.16.1
     hooks:
       - id: ruff-check
         args:

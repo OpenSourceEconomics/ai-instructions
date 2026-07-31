@@ -145,6 +145,19 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - **GitHub Actions schema validation**: If the project has `.github/workflows/`,
      ensure `.pre-commit-config.yaml` includes the `check-github-workflows` hook from
      `python-jsonschema/check-jsonschema`. Flag if missing.
+   - **`pixi-lock-check` hook**: If the project uses pixi, ensure the `repo: local`
+     `pixi-lock-check` hook is present, is on `stages: [pre-push]`, and is listed under
+     `ci.skip` (pre-commit.ci has no pixi binary, so it would fail there). Also remind
+     the user to run `prek install -t pre-push` once per clone — the hook silently never
+     runs otherwise.
+   - **Notebook/path/separator hooks**: If the project has `.ipynb` files, ensure the
+     `notebook-cell-source-format` local hook is present. For projects with Python code,
+     check for `no-hardcoded-user-paths` and `no-section-separator-comments`. These fire
+     heavily on older code — if a project has many pre-existing violations, propose an
+     `exclude:` for the legacy paths rather than omitting the hook.
+   - **codespell**: ensure the hook and a `[tool.codespell]` section exist. Standard
+     econ/numerics jargon is not flagged, so an over-long `ignore-words-list` is a smell;
+     German-language projects legitimately need more entries.
    - **GitHub Actions file extensions**: Workflow files in `.github/workflows/` should
      use `.yml` (not `.yaml`), matching GitHub's own convention. Flag any `.yaml` files
      for renaming.

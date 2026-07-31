@@ -138,7 +138,7 @@ catch the base class; library code dispatches on subclasses. Pre-existing except
 be hoisted into the hierarchy by changing their base class to `ProjectError` without
 moving their definition site.
 
-Downstream packages re-use the upstream hierarchy: `gettsim` imports `TTSIMError` from
+Downstream packages reuse the upstream hierarchy: `gettsim` imports `TTSIMError` from
 `ttsim.exceptions` and adds no `GettsimError` of its own. Packages with a single extra
 boundary add one class (`PersonaDefinitionError(TTSIMError)`).
 

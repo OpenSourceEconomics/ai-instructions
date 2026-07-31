@@ -34,7 +34,15 @@ per-file-ignores."boilerplate/.claude/*" = [
   "BLE001", # Blind exception (needed for robust JSON parsing)
   "T201",   # Print (required for hook output)
 ]
+per-file-ignores."hooks/*" = [
+  "CPY001", # Copyright notice
+  "T201",   # Print (pre-commit hooks report findings on stdout)
+]
 pydocstyle.convention = "google"
+
+[tool.codespell]
+ignore-words-list = "fpr,ist,mape,nd,nin"
+skip = "*.lock,*.svg,*.bib,*.ipynb"
 
 [tool.pyproject-fmt]
 column_width = 88

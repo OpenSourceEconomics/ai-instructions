@@ -108,9 +108,15 @@ ai-instructions/
 │   ├── implement-math.md
 │   ├── repair-math-root-cause.md
 │   └── close-pro-audit.md
+├── hooks/                 # Scripts invoked by downstream pre-commit configs
+│   └── fix_notebook_cell_source.py
 └── boilerplate/           # Dev environment config templates
     └── README.md
 ```
+
+Because `.ai-instructions/` is a submodule in every downstream project, hooks in
+`hooks/` can be referenced directly from a project's `.pre-commit-config.yaml` as
+`.ai-instructions/hooks/<script>.py` — no per-project copy to drift.
 
 ## Slash Commands
 
