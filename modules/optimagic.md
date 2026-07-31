@@ -16,21 +16,15 @@ result = om.minimize(
 
 ## The optimizer is not the mathematical oracle
 
-`result.success` is necessary evidence, never sufficient evidence. Before trusting an
-estimate or solution:
+`result.success` is necessary evidence, never sufficient evidence — it reports that a
+stopping criterion fired, not that the objective was right. Check `result.message` for
+the criterion that actually fired, and treat identification failure as distinct from
+optimizer failure: a flat or weakly identified direction produces a "converged" result
+at an arbitrary point along it.
 
-- confirm minimization/maximization sign and objective normalization;
-- verify parameter names/order/tree, fixed values, transformations, scales, bounds, and
-  nonlinear constraints;
-- evaluate objective and constraints at start, candidate, known benchmark, and
-  boundaries;
-- compare multiple starts and, for low dimensions, grids/profiles/contours;
-- compare gradients/Hessians to independent analytic/SymPy/directional derivatives;
-- inspect feasibility, residuals, active constraints, KKT/projected-gradient conditions,
-  and the actual stopping reason;
-- rerun with stricter tolerances and at least one appropriate alternative algorithm
-  where the solution is scientifically load-bearing;
-- distinguish flat/weakly identified directions from optimizer failure.
+Include `@.ai-instructions/modules/math.md`, whose §8 governs objective/parameter-map
+verification, derivative checks, and multi-start/profile evidence for load-bearing
+estimates.
 
 ## Algorithm selection
 
@@ -47,38 +41,22 @@ Never use Nelder–Mead as an unexamined default. Comparing algorithms is useful
 all receive the same objective, parameter transformation, constraints, and stopping
 scale.
 
-## Objective and derivative contract
+## Objective structure
 
-Record:
-
-- whether objective is total, mean, or weighted mean;
-- observation/cluster/time aggregation and missing-data masks;
-- penalties versus true constraints;
-- transformations and Jacobian adjustments;
-- simulation/quadrature seeds and common random numbers;
-- expected differentiability and kink conventions;
-- parameter units and scaling.
+State whether the objective is a total, a mean, or a weighted mean — a silent switch
+between them rescales gradients and every tolerance calibrated against them.
 
 For likelihood/GMM/minimum-distance work, expose per-observation or per-cluster
-contributions for inference tests. A scalar total alone makes resampling and robust
-covariance auditing unnecessarily fragile.
-
-## Estimation and inference
-
-- Identification is separate from numerical convergence. Use profiles, rank/eigenvalue
-  diagnostics, synthetic DGPs, and known analytical cases.
-- For sequential/two-step estimators, include earlier-step uncertainty and
-  cross-derivative propagation; use a common resampling unit when the theory requires
-  it.
-- Bootstrap the correct unit—individual, cluster, time block, market, or simulation
-  draw—and preserve dependence across jointly estimated periods/equations.
-- Check Hessian/sandwich/cluster/finite-sample conventions against the stated estimator.
-- Compare reported SEs to simulation or an analytical toy problem when feasible.
+contributions rather than only the scalar total. Robust covariance, clustering, and
+resampling all need them, and retrofitting the decomposition later is far more fragile
+than returning it from the start. Bootstrap the unit the theory requires — individual,
+cluster, time block, market, or simulation draw — and preserve dependence across jointly
+estimated periods or equations.
 
 ## Completion evidence
 
-Record the exact optimagic version, algorithm, starts, constraints, tolerances,
-objective values, termination message, derivative checks, profile/boundary results, and
-final parameter map. Keep a deterministic small optimization test in the suite. After
-two failed local repairs to the objective/parameter map, rebuild the literal
-objective/reference rather than switching algorithms blindly.
+Record the exact optimagic version and algorithm alongside the usual `math.md`
+completion record — the API and defaults move between releases, so a result is not
+reproducible without it. Keep a deterministic small optimization test in the suite.
+After two failed local repairs to the objective or parameter map, rebuild the literal
+objective rather than switching algorithms blindly.

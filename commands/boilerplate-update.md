@@ -234,6 +234,12 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `per-file-ignores`. For each, ask the user whether it is still needed.
    - **jaxtyping F722**: If the project uses `jaxtyping` (check dependencies), ensure
      `"F722"` is in `extend-ignore` with comment linking to the jaxtyping FAQ.
+   - **jaxtyping version floor**: If the project uses `jaxtyping`, require
+     `jaxtyping>=0.3.11` in `[project].dependencies`. Flag a lower floor or a missing
+     one — below 0.3.10 the module-level sentinels do not survive a cloudpickle round
+     trip, which breaks pickled DAG-built functions silently. Also flag any leftover
+     git/fork override in `[tool.pixi.pypi-dependencies]` pointing at a `jaxtyping`
+     branch: the fix is released, so the override must be removed.
    - **Pixi task names**: should follow the standard set
      (`tests`, `tests-with-cov`, `tests-jax`, `build-docs`, `view-docs`,
      `view-paper`, `view-pres`). Type checking is **not** a pixi task — ty runs as the

@@ -25,22 +25,15 @@ defect class is closed.
 
 ## 1. Write the executable contract first
 
-Before editing production code, record:
+Before editing production code, write down — as assertions or tests, not prose — the
+domains, shapes and axis meanings, units and transformation direction, timing and
+information set, boundary/tie/sign conventions, invalid-input semantics, and which
+downstream object consumes the output (value, policy, likelihood, estimate, SE, reported
+result). Resolve notation-to-code naming and axis mapping explicitly.
 
-- symbols, domains, parameter restrictions, and special/limiting cases;
-- input/output shapes, axis meanings, broadcasting, ordering, and flattening convention;
-- units, levels/logs, normalization, scaling, and transformation direction;
-- timing and information set: what is known, chosen, realized, and conditioned on;
-- sign, ordering, tie, inequality, and boundary conventions;
-- support, feasibility, terminal, missing, invalid, and fail-loud semantics;
-- exact versus approximate operations and the expected tolerance/error notion;
-- parameter, state, action, shock, seed, dtype, and device dependence;
-- the downstream object consuming the output: value, policy, argmax, probability,
-  likelihood, score, estimate, SE, welfare, equilibrium, or reported result.
-
-Turn the contract into assertions or tests. Resolve notation-to-code naming and axis
-mapping explicitly. Do not silently choose a branch, terminal convention, extrapolation
-rule, or normalization that the source leaves ambiguous.
+The rule that does the work: **do not silently choose** a branch, terminal convention,
+extrapolation rule, tie-break, or normalization that the source leaves ambiguous. Name
+the ambiguity and pick deliberately, or fail loudly.
 
 ## 2. Build an independent reference
 
@@ -104,29 +97,22 @@ publishing a plausible finite answer.
 ## 5. Testing ladder
 
 Use the smallest relevant layers; do not substitute only end-to-end tests for local
-mathematical evidence.
+mathematical evidence. Beyond the obvious historical witness, analytical/degenerate
+cases, and boundary cases, the layers that actually get skipped are:
 
-1. **Historical witness.** Fails before, passes after.
-1. **Analytical/degenerate cases.** Zero, identity, deterministic, one-state,
-   one-action, linear/quadratic, no-shock, no-transition, or other closed forms.
-1. **Boundary cases.** Equality, terminal node, empty/singleton, singular covariance,
-   zero probability/variance, binding constraints, support endpoints.
-1. **Tiny exhaustive cases.** Enumerate all states/actions/labels/permutations when
-   small.
-1. **Oracle differential.** Production agrees with independent reference.
-1. **Generated class.** Deterministic seeds and a parameterized mutation neighborhood.
-1. **Metamorphic properties.** Symmetry, equivariance, monotonicity, conservation,
-   probability sums, scale/translation behavior, envelope domination, permutation
-   invariance, relabeling invariance.
-1. **Transformed paths.** Eager/compiled/vectorized/parallel/dtype variants as
-   supported.
-1. **Integration.** Relevant project tests, examples, docs, and reported outputs.
-1. **Performance.** Only after correctness, compare time/memory/compilation without
-   changing the acceptance semantics.
+- **Tiny exhaustive cases.** Enumerate all states/actions/labels/permutations when
+  small.
+- **Oracle differential.** Production agrees with the independent reference of §2.
+- **Generated class.** Deterministic seeds over the §4 mutation neighborhood.
+- **Metamorphic properties.** Symmetry, equivariance, monotonicity, conservation,
+  probability sums, scale/translation behavior, envelope domination, relabeling
+  invariance.
+- **Transformed paths.** Eager/compiled/vectorized/parallel/dtype variants as supported.
 
-Use deterministic generators and print/store the seed and minimal shrunk witness.
-Property libraries are welcome, but a transparent explicit generator is often easier to
-preserve in scientific repositories.
+Then project integration, and performance last — comparing time/memory without changing
+acceptance semantics. Use deterministic generators and store the seed and minimal shrunk
+witness. A transparent explicit generator is usually easier to preserve in a scientific
+repository than a property library.
 
 ## 6. Floating-point decisions
 
@@ -218,14 +204,8 @@ to keep a scientific repair open.
 
 ## Required completion record
 
-For nontrivial mathematical work, leave a compact record containing:
-
-- equation/source locator and executable contract;
-- root-cause/counterexample class and implemented invariant;
-- reference/oracle file and independence basis;
-- historical witness and mutation suite;
-- exact commands, environment/dtype/device/seed, and observed outputs;
-- production diff and affected call paths;
-- level effect and decision/estimand/result effect;
-- performance result after correctness;
-- any exact unresolved artifact or author decision.
+For nontrivial mathematical work, leave a compact record: the counterexample class and
+the invariant that closes it, the oracle file and its independence basis, the exact
+commands with environment/dtype/seed and observed outputs, and — the part most often
+omitted — **the effect on the reported level *and* on the downstream
+decision/estimand/result**, plus any unresolved artifact or author decision.

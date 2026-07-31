@@ -24,19 +24,16 @@ def process(
 The shape-string syntax may require the project's configured ruff exception such as
 `F722`. Do not introduce a lint exception without checking the current configuration.
 
-## Mandatory reference-to-transform ladder
+## Transformed paths to cover
 
-For mathematical kernels compare the same deterministic cases under:
+`math.md`'s testing ladder calls for agreement across transformed paths; in JAX those
+are eager, `jax.jit`, the relevant `jax.vmap` / `lax.scan` / `lax.map` / sharded path,
+each supported float32/float64 policy and device, and the derivative path when
+derivatives are consumed. A NumPy reference that mirrors the same branch structure is
+not independent.
 
-1. independent Python/NumPy/exact/high-precision reference;
-1. JAX eager production;
-1. `jax.jit` production;
-1. relevant `jax.vmap`, `lax.scan`, `lax.map`, sharded, or parallel path;
-1. supported float32/float64 policy and device(s);
-1. primal plus derivative path when derivatives are consumed.
-
-Test values, policies/indices, masks/validity, and marginals separately. Compilation
-equality on one input is not enough; use boundaries and a generated mutation class.
+Test values, policies/indices, masks/validity, and marginals separately — compilation
+equality on one input is not enough.
 
 ## Precision policy
 
@@ -109,10 +106,10 @@ jax.tree_util.register_pytree_node(
   deterministic output ordering.
 - Benchmark only after reference/eager/JIT/sharded results agree.
 
-## Debugging and evidence
+## Debugging
 
-Use `jax.disable_jit`, `jax.debug.print`, `checkify`, smaller examples, and jaxprs to
-isolate semantics. Preserve the minimal reproducer, exact command,
-backend/version/dtype, and observed output. After two failed local fixes to one
-numerical class, build a literal reference/replacement rather than adding another JAX
-branch.
+`jax.disable_jit` separates a tracing/compilation bug from a mathematical one — try it
+first. `jax.debug.print` prints under trace, plain `print` does not. `checkify` surfaces
+errors that JIT otherwise swallows, and reading the jaxpr settles what was actually
+staged out. Record the backend and version alongside any discrepancy; several are
+backend-specific.

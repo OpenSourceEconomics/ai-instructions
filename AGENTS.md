@@ -16,8 +16,6 @@ Type hints are **mandatory** in every function signature.
 - Do NOT use `from __future__ import annotations` in Python 3.14+ projects — PEP 649
   deferred evaluation makes it unnecessary and changes runtime annotation semantics. For
   projects supporting < 3.14, use it for forward references.
-- Prefer `X | None` over `Optional[X]`; use `collections.abc` (`Sequence`, `Mapping`,
-  `Iterable`) for abstract types.
 
 ## Immutability
 
@@ -79,16 +77,17 @@ So treat `pixi lock` as mandatory before `git commit`, and double-check it befor
 
 ### Migrate feature `system-requirements` (cuda) via named platform variants
 
-pixi 0.72 deprecates feature-level `system-requirements = { cuda = "12" }` and its
-warning tells you to put the constraint on the platform as a **feature-level** inline
-table, `platforms = [{ platform = "linux-64", cuda = "12" }]`. **That feature-level form
-does not parse on 0.72** — `pixi lock` fails with `× expected a string, found table`
-(and `pixi info` will *not* catch it: it only echoes the host's own virtual packages, so
-the edit looks fine until you lock). The migration guide's example is a workspace-level
-one; the per-feature translation the warning implies is what's unsupported.
+pixi deprecates feature-level `system-requirements = { cuda = "12" }` and its warning
+tells you to put the constraint on the platform as a **feature-level** inline table,
+`platforms = [{ platform = "linux-64", cuda = "12" }]`. **That feature-level form does
+not parse** — `pixi lock` fails with `× expected a string, found table` (and `pixi info`
+will *not* catch it: it only echoes the host's own virtual packages, so the edit looks
+fine until you lock). The migration guide's example is a workspace-level one; the
+per-feature translation the warning implies is what's unsupported. Still true as of pixi
+0.75 — re-test before assuming it has been fixed.
 
-The form that **does** work on 0.72: declare **named platform variants** at the
-workspace level and point each cuda feature at its variant by bare string.
+The form that **does** work: declare **named platform variants** at the workspace level
+and point each cuda feature at its variant by bare string.
 
 ```toml
 [tool.pixi.workspace]
@@ -105,7 +104,7 @@ platforms = [ "linux-64-cuda12" ]              # bare string ref — parses
 jax = { version = ">=0.9", extras = [ "cuda12" ] }
 ```
 
-Verified properties (pixi 0.72): locks with **no warnings**; `target.linux-64` applies
+Verified properties (pixi 0.75): locks with **no warnings**; `target.linux-64` applies
 to the `linux-64-cuda12` variant; and because a variant shares the base conda subdir,
 the lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but
 resolve to the same `linux-64` packages (only the cuda features add the GPU wheels).
@@ -118,17 +117,7 @@ workspace or drop the orphaned feature.
 
 ## Package Structure
 
-Use `src` layout:
-
-```
-project/
-├── src/
-│   └── package/
-│       ├── __init__.py
-│       └── module.py
-├── tests/
-└── pyproject.toml
-```
+Use `src` layout — package code under `src/<package>/`, tests in a top-level `tests/`.
 
 ______________________________________________________________________
 
@@ -136,9 +125,8 @@ ______________________________________________________________________
 
 ## Naming Conventions
 
-- `lowercase_with_underscores` - functions, methods, variables
-- `UPPERCASE_WITH_UNDERSCORES` - constants
-- `CamelCase` - classes
+Standard PEP 8 casing is assumed. Beyond it:
+
 - Function names start with verb: `create_`, `calculate_`, `convert_`, `get_`
 - Private functions: `_underscore` prefix
 - Use `func`, not `fn`, when abbreviating "function" (e.g., `apply_func`)
@@ -289,9 +277,8 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
 
 ## Error Handling
 
-- Raise errors early with descriptive messages
-- `TypeError` for wrong types, `ValueError` for wrong values
-- Use `_fail_if_...` helper functions for validation
+Raise early, with a message naming the offending value. Factor validation into
+`_fail_if_...` helpers:
 
 ```python
 def _fail_if_not_list(data: Any) -> None:
@@ -363,17 +350,8 @@ for the feature itself.
 
 ### Mechanics
 
-- Test files: `test_<module>.py`
-- Test functions: `test_<function>_<behavior>`
-- One assertion per test
-- Use `@pytest.mark.parametrize` for multiple inputs
-
-```python
-@pytest.mark.parametrize("invalid_input", [-77, "typo"])
-def test_clean_scale_raises_on_invalid(invalid_input: Any) -> None:
-    with pytest.raises(ValueError):
-        clean_scale(pd.Series([invalid_input]))
-```
+Name tests `test_<function>_<behavior>` in `test_<module>.py`, and keep **one assertion
+per test** — parametrize rather than stacking assertions in one body.
 
 ## Type Checking
 

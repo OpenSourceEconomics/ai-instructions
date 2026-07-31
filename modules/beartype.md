@@ -347,18 +347,13 @@ DAG-built functions (ttsim does, gettsim and pylcm inherit) hit this whenever th
 annotations reference a jaxtyping type.
 
 Resolved upstream in `jaxtyping >= 0.3.10`
-([patrick-kidger/jaxtyping#390](https://github.com/patrick-kidger/jaxtyping/pull/390))
-by replacing all three sentinels with `__reduce__`-backed singleton classes. Until the
-release is on PyPI, depend on the fork via a pixi pypi-dependency override:
+([patrick-kidger/jaxtyping#390](https://github.com/patrick-kidger/jaxtyping/issues/390))
+by replacing all three sentinels with `__reduce__`-backed singleton classes.
 
-```toml
-[tool.pixi.pypi-dependencies]
-jaxtyping = { git = "https://github.com/hmgaudecker/jaxtyping", branch = "fix/sentinel-cloudpickle" }
-```
-
-Pair the override with `jaxtyping>=0.3.10` in `[project].dependencies` so consumers
-installing the released wheel get the same floor. Drop the override once the release
-lands.
+**Every project using jaxtyping pins `jaxtyping>=0.3.11` in `[project].dependencies`.**
+Do not lower the floor: below 0.3.10 the sentinels break under cloudpickle, silently for
+anything that does not exercise a pickled DAG in its tests. No git or fork override is
+needed — the fix is on PyPI.
 
 ## jaxtyping `Ellipsis` shim (under `from __future__ import annotations`)
 

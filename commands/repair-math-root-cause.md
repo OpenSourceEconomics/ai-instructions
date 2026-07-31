@@ -6,29 +6,20 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash
 
 # Repair Math Root Cause
 
-Repair a root-cause defect class using the `modules/math.md` discipline, whatever its
-source — a failing test, a bug report, or an external audit finding: **$ARGUMENTS**
+Repair this as a root-cause *class*, not a pinned case, under the `modules/math.md`
+discipline — whatever its source, a failing test, a bug report, or an external audit
+finding: **$ARGUMENTS**
 
-## Steps
+Read `.ai-instructions/modules/math.md` now if it is not already in context. Reproduce
+the witness before editing anything, identify the counterexample class it belongs to
+(§4), confirm the oracle does not share the production failure mode (§2), then batch all
+compatible root causes into one change rather than patching symptoms serially. Close with
+the required completion record.
 
-1. Reproduce the original witness before editing anything.
-2. Identify the counterexample class the witness belongs to, not just the pinned case.
-3. Verify (or build) an independent oracle/reference and confirm it does not share the
-   production failure mode.
-4. State the invariant that closes the class and a mechanical acceptance criterion.
-5. Implement the fix. Batch all compatible root causes together rather than patching one
-   symptom at a time.
-6. Run the historical witness, boundary cases, the generated mutation suite, transformed
-   paths (eager/compiled/vectorized as applicable), and the relevant project test suite.
-7. Record the completion evidence `modules/math.md` requires: oracle and independence
-   basis, mutation suite, exact commands/outputs, production diff, and the level and
-   decision/estimand effect.
+§10's stopping rule is the one to actually honor: if this is local repair attempt 2 or
+later for the same class and it still survives, stop micro-patching — replace the kernel
+with the simplest independently testable reference, or change the representation, and
+recover performance afterward.
 
-If this is local repair attempt 2 or later for the same class and it still survives, stop
-micro-patching. Replace the kernel with the simplest independently testable reference, or
-change the representation/architecture, before recovering performance.
-
-If the root-cause class came from a `pro-*-audit` skill finding (`pro-comp-method-audit`,
-`pro-econ-paper-audit`, `pro-math-code-review`, `pro-pylcm-scope-feasibility-audit`),
-preserve its finding/artifact IDs in the completion record and run `/close-pro-audit`
-afterward to prepare the closure bundle.
+If the class came from a `pro-*-audit` skill finding, preserve its finding/artifact IDs
+in the completion record and run `/close-pro-audit` afterward.
