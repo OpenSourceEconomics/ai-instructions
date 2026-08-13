@@ -312,17 +312,10 @@ Standard PEP 8 casing is assumed. Beyond it:
 ## Module Layout
 
 Write "deep" modules: important public function(s) at the top, private helpers below.
-Readers should see the API first without scrolling past implementation details.
-
-Never add decorative section-separator comments like:
-
-```python
-# ---------------------------------------------------------------------------
-# Section name
-# ---------------------------------------------------------------------------
-```
-
-Code structure should be self-evident from function names and ordering.
+Readers should see the API first without scrolling past implementation details. Code
+structure should be self-evident from function names and ordering, so never add
+decorative section-separator comments — the `no-section-separator-comments` pre-commit
+hook rejects them.
 
 ## Docstrings
 
@@ -332,21 +325,6 @@ reStructuredText) for markup inside docstrings: `` `code` ``, `$math$`, markdown
 - Imperative mood in summary lines ("Calculate utility", not "Calculates utility")
 - Use inline field docstrings (PEP 257) for dataclass attributes (see Frozen Dataclasses
   example above)
-
-```python
-def calculate_utility(consumption: float, gamma: float = 1.5) -> float:
-    """Calculate CRRA utility.
-
-    Args:
-        consumption: Consumption level (must be positive).
-        gamma: Coefficient of relative risk aversion.
-
-    Returns:
-        Utility value.
-
-    """
-    ...
-```
 
 ## Docstring Style
 
@@ -427,37 +405,10 @@ prose hides cases.
 # min/max/mean trio. `"off"` skips even the NaN fail-fast.
 ```
 
-## Pure Functions
-
-Write pure functions whenever possible:
-
-1. Same inputs → same outputs
-1. No side effects
-
-```python
-# Good: Separate I/O from logic
-def task_example(path_in: Path, path_out: Path) -> None:
-    data = pd.read_csv(path_in)  # I/O at boundary
-    result = process_data(data)  # Pure logic
-    result.to_pickle(path_out)  # I/O at boundary
-
-
-def process_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Pure function - all logic here."""
-    ...
-```
-
 ## Error Handling
 
-Raise early, with a message naming the offending value. Factor validation into
-`_fail_if_...` helpers:
-
-```python
-def _fail_if_not_list(data: Any) -> None:
-    if not isinstance(data, list):
-        msg = f"data must be a list, not {type(data).__name__}"
-        raise TypeError(msg)
-```
+Raise early, with the offending value named in the message. Factor validation into
+`_fail_if_...` helpers.
 
 ## Testing
 
