@@ -355,7 +355,7 @@ def _save_cache(path: Path | None, cache: dict) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Construct the command-line interface."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").partition("\n")[0])
     parser.add_argument("files", nargs="+", type=Path, help="`.bib` files to check")
     parser.add_argument(
         "--online", action="store_true", help="verify DOIs against CrossRef"
