@@ -84,7 +84,7 @@ not parse** — `pixi lock` fails with `× expected a string, found table` (and 
 will *not* catch it: it only echoes the host's own virtual packages, so the edit looks
 fine until you lock). The migration guide's example is a workspace-level one; the
 per-feature translation the warning implies is what's unsupported. Still true as of pixi
-0.75 — re-test before assuming it has been fixed.
+0.76 — re-test before assuming it has been fixed.
 
 The form that **does** work: declare **named platform variants** at the workspace level
 and point each cuda feature at its variant by bare string.
@@ -104,7 +104,7 @@ platforms = [ "linux-64-cuda12" ]              # bare string ref — parses
 jax = { version = ">=0.9", extras = [ "cuda12" ] }
 ```
 
-Verified properties (pixi 0.75): locks with **no warnings**; `target.linux-64` applies
+Verified properties (pixi 0.76): locks with **no warnings**; `target.linux-64` applies
 to the `linux-64-cuda12` variant; and because a variant shares the base conda subdir,
 the lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but
 resolve to the same `linux-64` packages (only the cuda features add the GPU wheels).

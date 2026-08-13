@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.26.0
+    rev: v2.27.1
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.1
+    rev: v0.16.2
     hooks:
       - id: ruff-check
         args: [--fix]
@@ -44,6 +44,23 @@ repos:
           - mdformat-gfm-alerts
           - mdformat-ruff
         args: [--wrap, '88']
+        # `commands/` is deliberately absent: those files open with YAML
+        # frontmatter, and mdformat rewrites the `---` fences into a thematic
+        # break plus a heading, which silently destroys the slash command.
         files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
+  - repo: local
+    hooks:
+      # This repo states both rules in prose; running them here keeps it from
+      # shipping a standard its own sources would fail.
+      - id: no-hardcoded-user-paths
+        name: no hardcoded user-specific absolute paths
+        language: pygrep
+        entry: (/home/[A-Za-z0-9_.-]+/|/Users/[A-Za-z0-9_.-]+/|[A-Za-z]:\\Users\\)
+        types_or: [python, toml]
+      - id: no-section-separator-comments
+        name: no decorative section-separator comments
+        language: pygrep
+        entry: ^\s*#\s*[-=#_*]{10,}\s*$
+        types: [python]
 ci:
   autoupdate_schedule: monthly
