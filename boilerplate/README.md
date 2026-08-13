@@ -200,11 +200,13 @@ unsafe-fixes = false
 lint.select = [ "ALL" ]
 lint.extend-ignore = [
   "COM812",  # Conflicts with ruff-format
+  "CPY001",  # Copyright notice at top of file
   "EM101",   # Exception must not use a string literal
   "EM102",   # Exception must not use an f-string literal
   "FIX002",  # Line contains TODO
   "ISC001",  # Conflicts with ruff-format
   "PLR0913", # Too many arguments in function definition
+  "PLR0917", # Too many positional arguments
   "S301",    # pickle module (standard intermediate format)
   # TC001-TC003: TYPE_CHECKING guards. Always ignore for Python 3.14+ projects
   # (PEP 649 deferred evaluation makes them unnecessary).
@@ -323,6 +325,7 @@ lint.select = [ "ALL" ]
 lint.extend-ignore = [
   "ANN",    # Type annotations
   "COM812", # Conflicts with ruff-format
+  "CPY001", # Copyright notice at top of file
   "D",      # Docstrings
   "EM101",  # Exception must not use a string literal
   "EM102",  # Exception must not use an f-string literal
