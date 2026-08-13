@@ -127,10 +127,15 @@ exit "$status"
 ```
 
 Capture the status before you branch on it, and exit on it explicitly. A trailing
-`[ $? -eq 5 ] && echo ...` inverts the very signal it is meant to guard: the test is
-false on a healthy run, so the line — and with it the script or CI step that ends on it
-— reports failure, while the nothing-collected case it was written to catch reports
-success.
+`[ $? -eq 5 ] && echo ...` inverts the very signal it is meant to guard: an AND-list
+takes the status of the last command it actually ran, so a false test leaves the list
+failing, and the script or CI step that ends on it reports failure on a healthy run
+while the nothing-collected case it was written to catch reports success.
+
+The hazard is not the AND-list but one whose truth is data-dependent and happens to land
+last, because then the source cannot tell you which status you get:
+`for i in 1 2; do [ "$i" = "9" ] && continue; done` exits 1 as a final statement, and
+the identical loop over `1 9` exits 0. `set -e` does not catch either.
 
 That one character in the Bad case defeats both rules in this group at once: the status
 you read belongs to `tail`, and the output you read is truncated. It is the only place
