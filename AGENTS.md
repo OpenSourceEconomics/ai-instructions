@@ -39,6 +39,178 @@ Prefer immutable data structures throughout.
 
 ______________________________________________________________________
 
+# Evidence and Claims
+
+**A claim ships with its evidence or with its limit — never bare.** Drop it, make the
+observation, or state it with what was measured and what was inferred marked, so a
+reader can see the edge of the evidence. A bounded claim is a claim; an unmarked one is
+a guess. This binds on numbers, counts, mechanisms, negative results, and "that can't
+happen" alike.
+
+The third branch is not a concession. "Eight call expressions; reachability per-mode not
+traced", "900 binades short, derived from the grid definition rather than from
+instrumented geometries", "single-route, unconfirmed" — each is decision-relevant, none
+is fully measured, and withholding any of them would be the wrong call. What is
+forbidden is stating one of them *unqualified*.
+
+## The instrument lied to you
+
+These fire many times a day and produce no symptom. Each yields evidence that looks
+exactly like the real thing, which is why care alone prevents none of them.
+
+### Measure something complete by construction
+
+A count, a summary line, an exit code, a checksum. Never a truncated view of a listing:
+`head`, `tail`, and `grep -m` return output indistinguishable from the full thing.
+
+```bash
+# Bad — shows 5 lines and looks complete; the file has 8, and nothing says so
+grep -n "envelope_at_query(" step.py | head -5
+
+# Good — every number is complete by construction; the listing is separate and whole.
+#        `grep -c` counts matching *lines*, so count occurrences instead whenever
+#        two calls can share one line.
+grep -c "envelope_at_query(" step.py           # matching lines
+grep -o "envelope_at_query(" step.py | wc -l   # call sites
+grep -n "envelope_at_query(" step.py
+```
+
+**You cannot know in advance which output becomes a claim**, so make every listing
+complete at the point you run it. Truncation cannot be repaired afterwards: a truncated
+result and a complete one are indistinguishable, and by the time the number matters the
+short view is all you have.
+
+Nobody reads a 2000-test run unabridged, and this does not ask you to. It asks that the
+*number you quote* come from something that cannot be short — the summary line, not the
+tail of the log.
+
+### Prove the instrument can fire, and that the specimen survived construction
+
+"No NaNs", "no regressions", "no callers" are claims about a detector, not about the
+world. A probe that reports a negative must be shown capable of producing a positive
+**in the same run** — a deliberately failing case, a known-bad input, a seeded defect.
+Otherwise a disabled check, a skipped validation, or a probe that silently did nothing
+reports clean.
+
+The same applies to the specimen. Assert — as a line of code in the run, not as a
+reading of the output — that your inputs survived construction **in the format that will
+actually be used**: `assert jnp.isfinite(rival).all()`, `assert x0 > 0 and x1 != x0`. An
+operand that leaves the representable range on the way in — underflowing to zero,
+overflowing to infinity, collapsing to equal endpoints, silently cast — answers an
+easier question truthfully, and the run continues.
+
+Two things that are not this check. A library diagnostic is not: depending on one to
+notice makes luck the last line of defence, and the quiet case is the one that reaches
+the record. Agreement with an independent report is not either: two parties can
+construct the same degenerate witness, and a confirming wrong answer is where checking
+stops.
+
+### Check the population, not the verdict
+
+Zero collected is not zero failures. A filter that selects nothing, a glob that matches
+nothing, and a query that returns nothing all exit successfully.
+
+```bash
+# Bad — the pipe hands you tail's status, so a run that collected nothing
+#       and a run that was killed both read as success
+pytest -m "not slow" tests/ | tail -1
+
+# Good — exit 5 is "nothing collected"; turn it into a real failure and pass
+#        every other status through unchanged
+pytest -m "not slow" tests/
+status=$?
+if [ "$status" -eq 5 ]; then
+  echo "NOTHING COLLECTED"
+  exit 1
+fi
+exit "$status"
+```
+
+Capture the status before you branch on it, and exit on it explicitly. A trailing
+`[ $? -eq 5 ] && echo ...` inverts the very signal it is meant to guard: the test is
+false on a healthy run, so the line — and with it the script or CI step that ends on it
+— reports failure, while the nothing-collected case it was written to catch reports
+success.
+
+That one character in the Bad case defeats both rules in this group at once: the status
+you read belongs to `tail`, and the output you read is truncated. It is the only place
+two of these fail on a single keystroke.
+
+A marker or filter that selects nothing is the common cause: on the command line `-m`
+*replaces* the configured expression rather than intersecting with it, so a directory
+marked wholesale can deselect its entire contents and still exit successfully.
+
+### Pin a comparison to an immutable id, and assert the relationship
+
+State what a measurement was taken against by commit hash, not by branch or tag name,
+and check that the baseline really stands in the relation you assume — an ancestor is an
+ancestor only if `git merge-base --is-ancestor` says so. A ref name is not a pin, and
+"latest upstream" is not a baseline: comparing against a tip that has diverged reports
+the other side's progress as your own deletions.
+
+The same applies to the environment: assert inside the run which installation you
+actually imported (`print(module.__file__)`), because a sibling checkout's editable
+install resolves silently and a console script's shebang can point outside the
+environment you believe you are in.
+
+## The claim outran its support
+
+These fire on conclusions rather than on commands. They are what turns a defensible
+result into an overstated one.
+
+### Treat an inherited claim as carrying a timestamp
+
+A figure or mechanism you got from another agent, an earlier round, or your own summary
+is a citation. Attribution is not freshness: **a correctly attributed superseded claim
+is still a wrong claim**, and re-attributing it launders it into the record as jointly
+held.
+
+Name the round, message, or commit the figure came from, and confirm that source is
+still its latest form. If you cannot, mark it inherited-unverified and let the reader
+weigh it.
+
+The same applies to stored artefacts. A frozen baseline, table, or calibration constant
+needs the commit **and** the numerical precision it was produced under recorded with it,
+or it cannot be compared to anything generated later.
+
+### Say what a sweep holds fixed
+
+Varying one input usually moves several quantities at once. Before naming a cause, write
+down what the varied input does **not** change; if you cannot, the sweep cannot separate
+them and is evidence for none of them.
+
+Two results agreeing corroborate only if they differ in what they hold fixed — otherwise
+it is one measurement reported twice, and calling it "two independent routes" is worse
+than reporting one, because it manufactures confidence that was never there. Two
+*recollections* of the same run are not two runs: if neither party can produce the
+invocation, the agreement is a shared memory, not evidence.
+
+If the result is invariant by construction, say so and label the sweep as a check on the
+edges — subnormals, overflow, empty inputs — rather than offering it as the argument.
+
+### Name the second route, or declare the claim single-route
+
+Re-checking your own number re-runs the same route and therefore separates nothing, by
+construction; no amount of attention fixes that. Before calling a result confirmed, name
+the second route — a derivation of what you measured, a measurement of what you derived,
+a different instrument, or a different agent. If you cannot name one, say the claim is
+single-route.
+
+### When you revise a claim, purge the old framing from the whole document
+
+A retraction that lands in one section leaves every other section asserting the
+retracted thing, because each editing pass only looks at the part it is editing. Before
+shipping a revised document, grep it for the old framing and name the search string you
+used, then resolve every cross-reference written as a placeholder — "see below", "TBD",
+a table cell pointing at a section that was never written.
+
+### When you contradict someone who read the same code, produce the distinguishing observation
+
+Being able to construct a counter-story is not evidence. Identify the observation on
+which the two accounts differ, make it, and report it — or concede.
+
+______________________________________________________________________
+
 # Python Environment
 
 ## Python Version
