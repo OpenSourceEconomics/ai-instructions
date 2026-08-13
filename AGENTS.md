@@ -145,6 +145,29 @@ A marker or filter that selects nothing is the common cause: on the command line
 *replaces* the configured expression rather than intersecting with it, so a directory
 marked wholesale can deselect its entire contents and still exit successfully.
 
+### Gate on the command's own status
+
+When a command's success decides whether you commit, push, or continue, branch on *that*
+command's status, never on a pipeline's. A gate built from a filter does not merely leak
+— it inverts:
+
+```bash
+# Bad — the commit is gated on grep. Hooks failing leaves a non-"Passed" line, so grep
+#       exits 0 and the commit lands; a clean run leaves none, so grep exits 1 and
+#       blocks it. Exactly backwards, in both directions.
+prek run --all-files | grep -v "Passed$" && git commit …
+
+# Good — gate on the runner's own status
+prek run --all-files > hooks.log
+status=$?
+[ "$status" -eq 0 ] || exit "$status"
+git commit …
+```
+
+A wrong number eventually meets a second reader — someone re-derives it, or it
+contradicts another number. A wrongly green gate meets no one, because passing it is
+what licensed nobody looking.
+
 ### Pin a comparison to an immutable id, and assert the relationship
 
 State what a measurement was taken against by commit hash, not by branch or tag name,
