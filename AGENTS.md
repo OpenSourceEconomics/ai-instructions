@@ -84,6 +84,18 @@ Nobody reads a 2000-test run unabridged, and this does not ask you to. It asks t
 *number you quote* come from something that cannot be short — the summary line, not the
 tail of the log.
 
+Complete is necessary and not sufficient. A predicate can cover the whole file and still
+answer the wrong question, because it matched something correlated with the defect
+rather than the defect: `grep -o "s'"` over a paper's notation is exactly complete and
+reports 5 where the symbol s-prime occurs 3 times, having counted the possessives in
+`resources'` and `Households'`. Widening it fixes nothing, since breadth was never what
+was wrong.
+
+So before running a measurement, say what the predicate would **also** match and what it
+**cannot** match, then name the defect and confirm the predicate is aimed at it rather
+than at a proxy. A predicate is chosen before you know the answer, which is why there is
+no later moment at which it looks wrong.
+
 ### Prove the instrument can fire, and that the specimen survived construction
 
 "No NaNs", "no regressions", "no callers" are claims about a detector, not about the
