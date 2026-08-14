@@ -405,10 +405,22 @@ class _DiagnosticRow:
     """
 ```
 
-### No PR numbers, no model-specific magic numbers
+### No internal references, no model-specific magic numbers
 
-PR references (`#334 removed the host stalls`, `the bug was fixed in #42`) rot as the
-codebase evolves and provide no useful signal to a reader who isn't already in context.
+**A comment may not name anything a reader cannot reach from the checkout.** The reader
+has no access to the conversation, review, or tracker. Banned in comments, docstrings,
+and test names:
+
+- **PR and issue numbers** — `#334 removed the host stalls`.
+- **Audit and review finding labels** — `(E4, F7 guard)`, `the F1 bug`. `F7` resolves
+  only to a conversation that is over.
+- **Review round numbers** — `round-3 audit F2`.
+- **Diff-relative vocabulary** — `pre-fix`, `the fix`, `no longer reads`.
+- **Internal design-document filenames** — not in the repository, not a reference.
+
+**Delete the label and see whether the sentence still teaches anything.** If not,
+rewrite it to say why the invariant holds.
+
 Magic numbers tied to a specific model size or hardware
 (`~2 MB at production grid sizes`, `fits on a 16 GB device`) imply a fixed scale that's
 only true on whichever model/box the comment was written against. State the qualitative
@@ -424,6 +436,9 @@ dependency instead.
 # grid sizes) so we don't re-introduce the host stalls that #334
 # removed.
 ```
+
+The `no-internal-references` hook catches the labelled forms; unlabelled history stays a
+review responsibility.
 
 ### Bulleted lists for enumerated cases
 

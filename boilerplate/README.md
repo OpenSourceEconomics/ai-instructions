@@ -498,6 +498,15 @@ repos:
         entry: ^\s*#\s*[-=#_*]{10,}\s*$
         types:
           - python
+      # Catches the labelled forms only — PR/issue numbers, `E<n>`/`F<n>`
+      # finding labels, `round-<n>`, `pre-fix`. Prose that rehearses history
+      # without a label stays a review responsibility.
+      - id: no-internal-references
+        name: no references a reader cannot reach from the checkout
+        language: pygrep
+        entry: '(?:^|[\s(\[])\#[0-9]{2,5}\b(?!\.[0-9])|(?i:\b(?:round|wave)-[0-9]+\b)|(?i:\b(?:audit|review|finding|witness|defect|bug|fix|guard)\s+)(?:finding\s+)?[EF][0-9]{1,2}\b|\b[EF][0-9]{1,2}(?i:\s+(?:fix|guard|bug|defect|witness|signature|regression|finding|audit)\b)|(?:^|\s)\((?:the\s+)?(?!(?:F8|F16|F32|F64)\b)[EF][0-9]{1,2}[''’]?(?:\s*[,/]\s*[EF][0-9]{1,2}[''’]?)*(?:[,)\s])|(?i:\b(?:pre|post)-fix\b)'
+        types:
+          - python
 ci:
   autoupdate_schedule: monthly
   # pre-commit.ci has no pixi environments and blocks network at hook runtime;
@@ -512,10 +521,26 @@ The `pre-push` stage needs installing once per clone — `prek install -t pre-pu
 alongside the usual `prek install`. The `pre-push-hooks-installed` hook above exists so
 that omission fails loudly on the next commit instead of going unnoticed.
 
-`no-hardcoded-user-paths` and `no-section-separator-comments` mechanize rules
-`AGENTS.md` already states in prose. They are near-free on actively developed projects
-but can fire heavily on older code; add `exclude:` for legacy directories rather than
-dropping the hook.
+`no-hardcoded-user-paths`, `no-section-separator-comments` and `no-internal-references`
+mechanize rules `AGENTS.md` already states in prose. They are near-free on actively
+developed projects but can fire heavily on older code; add `exclude:` for legacy
+directories rather than dropping the hook.
+
+`no-internal-references` is deliberately calibrated for a low false-positive rate rather
+than for coverage, since a hook that cries wolf gets excluded wholesale. It matches a
+finding label only next to the vocabulary that makes it a reference (`audit F2`,
+`the F1 bug`, `(E4, F7 guard)`), never a bare `F7`; a parenthesised label list only
+after a delimiter, so a call's argument list (`floordiv(E1, E2)`) and a dtype tuple
+(`(F32, BF16)`) stay clean; and an issue number only at two-to-five digits without a
+decimal tail, so a CSS hex colour (`#000000`), an ordinal (`case #2`) and a citation
+(`AMS55 #15.3.10`) stay clean. Measured against the installed `jax` source — 618 files,
+no relation to any project's audit vocabulary — it produces six hits, all six genuine
+PR/issue references in comments, and no false positives. Projects that legitimately use
+`E<n>`/`F<n>` as mathematical notation should `exclude:` those modules.
+
+It is scoped to `python` to match its siblings. Widening it to `markdown` catches design
+notes too, at the cost of tripping on any document that quotes the banned forms as
+examples — this file, for one.
 
 ### Tier C: Minimal Configuration
 
