@@ -96,6 +96,29 @@ So before running a measurement, say what the predicate would **also** match and
 than at a proxy. A predicate is chosen before you know the answer, which is why there is
 no later moment at which it looks wrong.
 
+A summary line is itself only available to a run that *reached* one. A run killed
+part-way — walltime, OOM, a worker dying — writes no summary and no `--junitxml` report,
+since the report is written at the end. What it leaves is whatever it had already
+streamed, which under `-q` is bare `F` markers attributable to no test. So `-v` and
+`--junitxml` are not alternatives: the report is the count that cannot be short on a run
+that finishes, and `-v` is the only record of one that does not. Ask which of the two
+failure modes you are exposed to before dropping either.
+
+That generalises into the standing limit of every check here that reads a claim back
+against an artefact: **the check is blind to any failure that destroys the artefact
+first.** Comparing a sentence against a log presumes a log. Nothing recovers a run whose
+evidence died with it, so the only defence is arranging *in advance* that a partial run
+still leaves something attributable.
+
+**Prefer installing a rule to remembering it.** Every rule in this section has been
+violated by an agent that had read it, because a note is read at the wrong moment — the
+rule matters when a command is composed, and that is the one moment nothing re-reads the
+file. Where a rule can become an artefact that fires at the point of use, make it one: a
+task default (`pixi run tests` carries `-v --junitxml=…`), a PreToolUse hook, or a
+one-time sweep for state a per-command check cannot see. Give any gate an explicit, easy
+override that leaves a reason in the transcript; a gate with no override is a gate that
+gets disabled, which is strictly worse than no gate, because it also removes the record.
+
 ### Prove the instrument can fire, and that the specimen survived construction
 
 "No NaNs", "no regressions", "no callers" are claims about a detector, not about the
