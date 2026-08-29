@@ -531,9 +531,19 @@ ci:
   # pre-commit.ci has no pixi environments and blocks network at hook runtime;
   # the GitHub Actions `run-ty` job covers type checking, and pixi-lock-check
   # needs a pixi binary that pre-commit.ci does not provide.
+  #
+  # The two script hooks above run files from the `.ai-instructions` submodule,
+  # and pre-commit.ci clones without submodules, so there they fail as a missing
+  # executable rather than running. `pre-push-hooks-installed` asks about the
+  # local clone and is meaningless on a runner anyway; the notebook check does
+  # lose CI coverage, and holds only where the submodule is present. If a
+  # project wants it enforced on CI, give the `actions/checkout` step
+  # `submodules: true` and run `prek` from a workflow instead.
   skip:
     - ty
     - pixi-lock-check
+    - pre-push-hooks-installed
+    - notebook-cell-source-format
 ```
 
 The `pre-push` stage needs installing once per clone — `prek install -t pre-push`
