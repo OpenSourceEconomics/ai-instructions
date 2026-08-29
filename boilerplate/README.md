@@ -263,13 +263,20 @@ ini_options.norecursedirs = [ "docs" ]
 ini_options.paths = [ "./src/project_name" ]
 ini_options.pdbcls = "pdbp:Pdb"
 
-# codespell does NOT flag standard econ/numerics jargon (crra, egm, endog, exog,
-# gmm, hessian, jacobian, heteroskedasticity, ...) — verified, so no entry is
-# needed for those. What it does trip on is short abbreviations that collide with
-# real words, and German text, where `ist`/`nd` and friends fire constantly.
-# Extend per project rather than dropping the hook.
+# codespell passes most econ/numerics jargon (crra, egm, endog, exog, gmm,
+# hessian, jacobian, heteroskedasticity) but not all of it, so the list below
+# carries the ones it does flag. Measured on a solver codebase: `statics` (as in
+# comparative statics) 91 times, `arithmetics` 4, `disjointness` 2 — all correct
+# as written. It also trips on short abbreviations that collide with real words,
+# and on German text, where `ist`/`nd` and friends fire constantly.
+#
+# Extend per project rather than dropping the hook, and prefer an inline
+# `# codespell:ignore` for a one-off that is deliberate — a misspelling a test
+# asserts on, a regex prefix — so the word stays caught everywhere else. Put the
+# comment on the line holding the word: the formatter can wrap a call across
+# lines and separate the two, and codespell is line-scoped.
 [tool.codespell]
-ignore-words-list = "fpr,ist,mape,nd,nin"
+ignore-words-list = "arithmetics,disjointness,fpr,ist,mape,nd,nin,statics"
 skip = "*.lock,*.svg,*.bib,*.ipynb"
 
 [tool.pyproject-fmt]

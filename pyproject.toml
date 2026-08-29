@@ -41,7 +41,7 @@ per-file-ignores."hooks/*" = [
 pydocstyle.convention = "google"
 
 [tool.codespell]
-ignore-words-list = "fpr,ist,mape,nd,nin"
+ignore-words-list = "arithmetics,disjointness,fpr,ist,mape,nd,nin,statics"
 skip = "*.lock,*.svg,*.bib,*.ipynb"
 
 [tool.pyproject-fmt]
