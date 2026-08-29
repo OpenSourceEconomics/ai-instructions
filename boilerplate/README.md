@@ -128,11 +128,23 @@ When renaming tasks or environments, also update references in:
 To find the latest versions for GitHub Actions:
 
 1. Run `pixi self-update`, then `pixi --version`
-1. Resolve the latest action versions from the releases API:
+1. Resolve the latest action versions. **Sort by version, never take `releases[0]`** —
+   that endpoint returns *publish* order, and every action that backports to an older
+   major eventually publishes an old version last:
    ```bash
-   gh api repos/prefix-dev/setup-pixi/releases --jq '.[0].tag_name'
-   gh api repos/actions/checkout/releases --jq '.[0].tag_name'
+   latest_tag() {  # highest semver across releases and tags, not newest publish
+     { gh api "repos/$1/releases?per_page=100" --jq '.[].tag_name'
+       gh api "repos/$1/tags?per_page=100"     --jq '.[].name'
+     } | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -V -u | tail -1
+   }
+   latest_tag prefix-dev/setup-pixi
+   latest_tag actions/checkout
    ```
+   Measured on 2026-08-29, `.[0].tag_name` reported `actions/cache` at `v5.1.0` while
+   `v6.1.0` existed, and `codecov/codecov-action` at `v5.5.5` while `v7.0.0` existed —
+   so following it would have proposed **downgrading** a project that was already
+   correct. A version check that can silently recommend going backwards is worse than no
+   check.
 1. Update `pixi-version:` and `uses: prefix-dev/setup-pixi@` accordingly
 
 **`pixi-version:` must match the local pixi from step 1, not merely be recent.**
@@ -361,7 +373,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.27.1
+    rev: v2.28.2
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -407,7 +419,7 @@ repos:
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.2
+    rev: v0.16.5
     hooks:
       - id: ruff-check
         args:
@@ -422,7 +434,7 @@ repos:
           - pyi
           - python
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.71
+    rev: v0.0.75
     hooks:
       - id: ty
         # `--no-project` stops uv from creating a `.venv`/`uv.lock` in this
@@ -560,7 +572,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.2
+    rev: v0.16.5
     hooks:
       - id: ruff-check
         args:
@@ -613,9 +625,9 @@ jobs:
           - py314
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: prefix-dev/setup-pixi@v0.10.1
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          pixi-version: v0.76.2
+          pixi-version: v0.78.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
@@ -638,9 +650,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: prefix-dev/setup-pixi@v0.10.1
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          pixi-version: v0.76.2
+          pixi-version: v0.78.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
