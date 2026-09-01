@@ -153,13 +153,18 @@ pytest -m "not slow" tests/ | tail -1
 # Good — exit 5 is "nothing collected"; turn it into a real failure and pass
 #        every other status through unchanged
 pytest -m "not slow" tests/
-status=$?
-if [ "$status" -eq 5 ]; then
+rc=$?
+if [ "$rc" -eq 5 ]; then
   echo "NOTHING COLLECTED"
   exit 1
 fi
-exit "$status"
+exit "$rc"
 ```
+
+`rc`, not `status`: zsh reserves `status` as a read-only synonym for `$?`, so the
+assignment fails outright and the guard then reads the failed assignment's own status
+rather than the command's. It fails toward a false red here, which is the safe
+direction, but the line does not do what it says in the shell this project uses.
 
 Capture the status before you branch on it, and exit on it explicitly. A trailing
 `[ $? -eq 5 ] && echo ...` inverts the very signal it is meant to guard: an AND-list
@@ -194,8 +199,8 @@ prek run --all-files | grep -v "Passed$" && git commit …
 
 # Good — gate on the runner's own status
 prek run --all-files > hooks.log
-status=$?
-[ "$status" -eq 0 ] || exit "$status"
+rc=$?
+[ "$rc" -eq 0 ] || exit "$rc"
 git commit …
 ```
 
