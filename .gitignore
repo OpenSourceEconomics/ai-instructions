@@ -8,8 +8,10 @@
 # macOS
 .DS_Store
 
-# pixi
-.pixi/
+# pixi -- no trailing slash: giving a scratch worktree a toolchain by symlinking
+# another checkout's environment is common, and `.pixi/` matches a directory but
+# not a symlink of that name, so `git add -A` commits a machine-local path.
+.pixi
 
 # Python
 __pycache__/
