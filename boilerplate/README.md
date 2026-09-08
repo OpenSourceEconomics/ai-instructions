@@ -239,9 +239,8 @@ lint.per-file-ignores."tests/*" = [
 lint.pydocstyle.convention = "google"
 
 [tool.ty]
-# ty resolves third-party imports from this pixi env (the official ty-pre-commit hook
-# runs `uv check --no-project`, so uv neither creates a `.venv` nor resolves deps). Run
-# `pixi install` once.
+# ty resolves third-party imports from this pixi env. The pre-commit hook runs
+# ty directly; pixi owns the project environment. Run `pixi install` once.
 environment.python = ".pixi/envs/py314"
 # Promote all warn/ignore-default rules to error.
 # Rules that default to error are omitted (already enforced).
@@ -441,14 +440,14 @@ repos:
           - pyi
           - python
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.75
+    rev: v0.0.79
     hooks:
       - id: ty
-        # `--no-project` stops uv from creating a `.venv`/`uv.lock` in this
-        # pixi-managed repo; ty resolves third-party imports from the env named
-        # in `[tool.ty] environment.python` (run `pixi install` once).
-        args:
-          - --no-project
+        # Run ty directly so import resolution uses `[tool.ty] environment.python`.
+        # Keep this dependency pin aligned with the hook revision above.
+        entry: ty check
+        additional_dependencies:
+          - ty==0.0.79
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:

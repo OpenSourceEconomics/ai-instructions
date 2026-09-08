@@ -566,6 +566,12 @@ Use **ty** (not mypy, not pyright). ty runs as a pre-commit hook
 `prek run --all-files` — resolving third-party imports from the pixi environment named
 in `[tool.ty] environment.python`. Run `pixi install` once so that environment exists.
 
+For pixi-managed projects, override the hook with `entry: ty check` and install
+`ty==<version>` through `additional_dependencies`, matching the hook's `rev` exactly.
+Update both pins together. The direct entry leaves environment selection to ty's
+configuration; the `uv check` wrapper can select its own environment even with
+`--no-project`. Keep the upstream whole-project checking behavior.
+
 - Suppress with `# ty: ignore[rule-name]` (never `# type: ignore`); always name the
   rule.
 
