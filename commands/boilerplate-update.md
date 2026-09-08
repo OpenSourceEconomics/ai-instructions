@@ -265,6 +265,12 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `ty` pre-commit hook (`astral-sh/ty-pre-commit`), resolving imports from
      `[tool.ty] environment.python`. Flag non-standard names, a leftover `ty` /
      `type-checking` pixi task or environment, and a missing ty hook.
+   - **ty hook entry for pixi projects**: Require `entry: ty check` and an exact
+     `ty==<version>` in `additional_dependencies`, matching the hook `rev` without
+     its `v` prefix. Update both pins together and remove `uv check` arguments such
+     as `--no-project`. The wrapper can select the hook environment instead of the
+     pixi environment. Preserve upstream whole-project checking; do not override
+     `pass_filenames: false` or `always_run: true`.
 
 8. **Generate or update AGENTS.md.** If the user selected it in step 4, generate or update the
    project's `AGENTS.md`. Structure:
