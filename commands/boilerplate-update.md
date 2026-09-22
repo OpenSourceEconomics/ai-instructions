@@ -258,14 +258,15 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      pixi environment. Preserve upstream whole-project checking; do not override
      `pass_filenames: false` or `always_run: true`.
    - **Legacy `CLAUDE.md` / `GEMINI.md` wrappers**: `AGENTS.md` is the only agent
-     instruction file. Flag a tracked `CLAUDE.md` or `GEMINI.md` at the project root
-     for removal. If either holds anything beyond `@AGENTS.md`, migrate that content
-     into `AGENTS.md` before deleting it. Leave `CLAUDE.local.md` alone (personal,
-     gitignored). Also check every directory above the project root: Claude Code
-     reads `AGENTS.md` only when no `CLAUDE.md`, `.claude/CLAUDE.md` or
-     `CLAUDE.local.md` exists in the working directory or above it, so a `CLAUDE.md`
-     in a parent directory (e.g. a workspace that holds several projects) silently
-     stops the project's own `AGENTS.md` from loading. Flag such parent files too.
+     instruction file. Flag `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md` and
+     `GEMINI.md` at the project root for removal, whether tracked or not
+     (`CLAUDE.local.md` is usually gitignored). If any holds anything beyond
+     `@AGENTS.md`, migrate that content into `AGENTS.md` before deleting it. Also
+     check every directory above the project root: Claude Code reads `AGENTS.md`
+     only when none of `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists
+     in the working directory or above it, so such a file in a parent directory
+     (e.g. a workspace that holds several projects) silently stops the project's own
+     `AGENTS.md` from loading. Flag such parent files too.
      Drop `CLAUDE\.md` from mdformat `files:` patterns once the file is gone.
 
 7. **Generate or update AGENTS.md.** Generate or update the project's `AGENTS.md`.
