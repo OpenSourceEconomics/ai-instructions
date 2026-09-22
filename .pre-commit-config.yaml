@@ -47,7 +47,7 @@ repos:
         # `commands/` is deliberately absent: those files open with YAML
         # frontmatter, and mdformat rewrites the `---` fences into a thematic
         # break plus a heading, which silently destroys the slash command.
-        files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
+        files: (AGENTS\.md|README\.md|modules/.*\.md|profiles/.*\.md)
   - repo: local
     hooks:
       # This repo states both rules in prose; running them here keeps it from

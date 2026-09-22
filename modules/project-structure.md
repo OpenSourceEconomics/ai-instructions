@@ -28,8 +28,7 @@ rely on manual execution order — let pytask resolve dependencies.
 
 ## AI agent instruction files
 
-Each project root has `AGENTS.md` (the content) plus thin `CLAUDE.md` and `GEMINI.md`
-wrappers, each containing only `@AGENTS.md`. The `GEMINI.md` is what lets the Gemini CLI
-— and roborev code reviews — pick up the shared standards. When `AGENTS.md` lives in a
-parent directory or submodule, adjust the include path accordingly (e.g.
-`@../AGENTS.md`).
+Each project root has a single `AGENTS.md`; there are no `CLAUDE.md` or `GEMINI.md`
+wrappers. Claude Code reads `AGENTS.md` only when no `CLAUDE.md` exists in the project
+or any directory above it, so a leftover wrapper — including one in a parent workspace
+directory — stops the project's `AGENTS.md` from loading.
