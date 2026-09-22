@@ -61,8 +61,8 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 
    Do not proceed until the submodule is confirmed ready with modules/ and profiles/.
 
-2. **Interview: project tier.** First, check if `CLAUDE.md` (or `AGENTS.md`) already
-   contains a `@.ai-instructions/profiles/` include line. If so, infer the tier from the
+2. **Interview: project tier.** First, check if `AGENTS.md` (or a legacy `CLAUDE.md`)
+   already contains a `@.ai-instructions/profiles/` include line. If so, infer the tier from the
    profile name and skip this question — just confirm to the user what tier was detected.
 
    If no tier is stored, use AskUserQuestion with a single-select question. Options:
@@ -88,25 +88,11 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    Do not skip this step. Do not proceed until the user answers. Do not combine this
    question with any other question.
 
-4. **Interview: AI tool files.** Use AskUserQuestion with a multi-select question.
-   Options:
-
-   - **AGENTS.md** — primary agent instruction file, read by all tools (Claude, Gemini,
-     Codex, Copilot, Cursor). Contains `@`-includes for shared standards plus
-     project-specific instructions.
-   - **CLAUDE.md** — thin `@AGENTS.md` wrapper, only needed for Claude Code (the only
-     tool that doesn't auto-read AGENTS.md).
-   - **GEMINI.md** — thin `@AGENTS.md` wrapper for the Gemini CLI (used by roborev for
-     code reviews).
-
-   Do not skip this step. Do not proceed until the user answers. Do not combine this
-   question with any other question.
-
-5. **Read the boilerplate templates.** Step 1 guarantees `.ai-instructions/` exists by
+4. **Read the boilerplate templates.** Step 1 guarantees `.ai-instructions/` exists by
    now. Read `.ai-instructions/boilerplate/README.md` in full to understand the expected
    configuration for the determined tier.
 
-6. **Read the project's current configuration.** Read these files:
+5. **Read the project's current configuration.** Read these files:
    - `pyproject.toml`
    - `.pre-commit-config.yaml`
    - `.gitignore`
@@ -116,7 +102,7 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - `GEMINI.md` (if exists)
    - Any GitHub Actions workflow files in `.github/workflows/`
 
-7. **Compare and report deviations.** For each file, compare against the tier-appropriate
+6. **Compare and report deviations.** For each file, compare against the tier-appropriate
    boilerplate template. Report:
 
    - **Hook version mismatches**: e.g., ruff v0.15.1 vs template v0.15.5
@@ -229,7 +215,7 @@ context. Do not reuse answers from previous runs. Each invocation is independent
            args:
              - --wrap
              - "88"
-           files: (AGENTS\.md|CLAUDE\.md|README\.md)
+           files: (AGENTS\.md|README\.md)
          - id: mdformat
            additional_dependencies:
              - mdformat-myst
@@ -240,7 +226,7 @@ context. Do not reuse answers from previous runs. Each invocation is independent
            files: (docs/.|documents/.)
            exclude: (documents/presentation.md)
      ```
-     The first hook uses `mdformat-gfm` for root-level files only (AGENTS.md, CLAUDE.md,
+     The first hook uses `mdformat-gfm` for root-level files only (AGENTS.md,
      README.md). The second hook uses `mdformat-myst` for docs directories. These MUST
      be separate hooks because `mdformat-gfm` and `mdformat-myst` are incompatible
      parsers.
@@ -271,9 +257,19 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      as `--no-project`. The wrapper can select the hook environment instead of the
      pixi environment. Preserve upstream whole-project checking; do not override
      `pass_filenames: false` or `always_run: true`.
+   - **Legacy `CLAUDE.md` / `GEMINI.md` wrappers**: `AGENTS.md` is the only agent
+     instruction file. Flag a tracked `CLAUDE.md` or `GEMINI.md` at the project root
+     for removal. If either holds anything beyond `@AGENTS.md`, migrate that content
+     into `AGENTS.md` before deleting it. Leave `CLAUDE.local.md` alone (personal,
+     gitignored). Also check every directory above the project root: Claude Code
+     reads `AGENTS.md` only when no `CLAUDE.md`, `.claude/CLAUDE.md` or
+     `CLAUDE.local.md` exists in the working directory or above it, so a `CLAUDE.md`
+     in a parent directory (e.g. a workspace that holds several projects) silently
+     stops the project's own `AGENTS.md` from loading. Flag such parent files too.
+     Drop `CLAUDE\.md` from mdformat `files:` patterns once the file is gone.
 
-8. **Generate or update AGENTS.md.** If the user selected it in step 4, generate or update the
-   project's `AGENTS.md`. Structure:
+7. **Generate or update AGENTS.md.** Generate or update the project's `AGENTS.md`.
+   Structure:
 
    ```markdown
    @.ai-instructions/profiles/<tier-profile>.md
@@ -297,33 +293,13 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    If an AGENTS.md already exists, preserve existing project-specific content and only
    update the `@`-include lines at the top.
 
-9. **Generate or update CLAUDE.md.** If the user selected it in step 4, ensure CLAUDE.md contains:
-
-   ```
-   @AGENTS.md
-   ```
-
-   If CLAUDE.md already has project-specific content beyond `@`-includes, migrate that
-   content to AGENTS.md (so all tools benefit) and replace CLAUDE.md with just
-   `@AGENTS.md`.
-
-10. **Generate or update GEMINI.md.** If the user selected it in step 4, ensure GEMINI.md
-    contains:
-
-    ```
-    @AGENTS.md
-    ```
-
-    If `AGENTS.md` is not at the repo root (e.g., in a parent directory), adjust the path
-    to match whatever `CLAUDE.md` uses.
-
-11. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
+8. **Propose changes.** Show each proposed change as a before/after diff. Group by file.
     For environment/task renames, also check and update:
-    - `AGENTS.md` / `CLAUDE.md` command references
+    - `AGENTS.md` command references
     - `.github/workflows/` CI environment references
     - Any `Makefile` or scripts referencing old names
 
-12. **Run prek.** After applying approved changes, run:
+9. **Run prek.** After applying approved changes, run:
 
     ```bash
     pixi run prek run --all-files
@@ -348,4 +324,5 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 - **Do not auto-apply changes** — present them for review, then apply only what the user
   approves
 - **Update GitHub Actions** workflow references if task/environment names change
-- **Migrate CLAUDE.md content** to AGENTS.md when possible so all tools benefit
+- **Migrate `CLAUDE.md` / `GEMINI.md` content** to `AGENTS.md` before removing the
+  wrappers, so no project-specific instruction is lost

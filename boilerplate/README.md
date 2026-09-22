@@ -14,19 +14,22 @@ Common boilerplate configurations for project/repository setup.
 All project-specific agent instructions live in `AGENTS.md` at the project root. This
 single file serves all AI coding tools.
 
-| Tool           | Reads `AGENTS.md`? | Resolves `@` includes? | Extra file needed?                       |
-| -------------- | ------------------ | ---------------------- | ---------------------------------------- |
-| Claude Code    | Via `@AGENTS.md`   | Yes (nested, max 5)    | `CLAUDE.md` containing just `@AGENTS.md` |
-| Gemini CLI     | Yes (auto)         | Yes                    | `GEMINI.md` containing just `@AGENTS.md` |
-| OpenAI Codex   | Yes (primary)      | No                     | None                                     |
-| GitHub Copilot | Yes (auto)         | No                     | None                                     |
-| Cursor         | Yes (auto)         | No                     | None                                     |
+| Tool           | Reads `AGENTS.md`? | Resolves `@` includes? |
+| -------------- | ------------------ | ---------------------- |
+| Claude Code    | Yes (auto)         | Yes (nested, max 5)    |
+| OpenAI Codex   | Yes (primary)      | No                     |
+| GitHub Copilot | Yes (auto)         | No                     |
+| Cursor         | Yes (auto)         | No                     |
+
+Don't add `CLAUDE.md` or `GEMINI.md` wrappers, and remove existing ones. Claude Code
+reads `AGENTS.md` only when no `CLAUDE.md` exists in the project or any directory above
+it.
 
 ### AGENTS.md (project root)
 
 Put `@`-includes for shared standards at the top, then project-specific content below.
-Claude and Gemini resolve the includes; other tools ignore them as plain text but still
-read the project-specific sections.
+Claude Code resolves the includes; other tools ignore them as plain text but still read
+the project-specific sections.
 
 ```markdown
 @.ai-instructions/profiles/tier-b-research.md
@@ -47,23 +50,6 @@ Brief project description.
 ## Architecture
 
 Project-specific structure and conventions.
-```
-
-### CLAUDE.md (project root)
-
-Only needed for Claude Code. Contains a single line:
-
-```
-@AGENTS.md
-```
-
-### GEMINI.md (project root)
-
-Ensures the Gemini CLI (and roborev reviews) picks up the shared coding standards.
-Contains a single line:
-
-```
-@AGENTS.md
 ```
 
 ### .ai-instructions submodule
@@ -468,7 +454,7 @@ repos:
         args:
           - --wrap
           - "88"
-        files: (AGENTS\.md|CLAUDE\.md|README\.md|modules/.*\.md|profiles/.*\.md)
+        files: (AGENTS\.md|README\.md|modules/.*\.md|profiles/.*\.md)
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
