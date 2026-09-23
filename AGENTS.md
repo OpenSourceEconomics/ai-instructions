@@ -324,7 +324,13 @@ not parse** — `pixi lock` fails with `× expected a string, found table` (and 
 will *not* catch it: it only echoes the host's own virtual packages, so the edit looks
 fine until you lock). The migration guide's example is a workspace-level one; the
 per-feature translation the warning implies is what's unsupported. Still true as of pixi
-0.76 — re-test before assuming it has been fixed.
+0.81 — re-test before assuming it has been fixed.
+
+Do migrate rather than live with the warning: pixi 0.81 converts the deprecated table
+into an auto-named platform variant on its own (`linux-64-cuda-13`, in older locks
+`p1`), and in a workspace with path-installed PyPI packages that conversion crashed the
+PyPI solve (`build dispatch initialization failed`), so the lock could not be
+regenerated at all.
 
 The form that **does** work: declare **named platform variants** at the workspace level
 and point each cuda feature at its variant by bare string.
@@ -344,11 +350,20 @@ platforms = [ "linux-64-cuda12" ]              # bare string ref — parses
 jax = { version = ">=0.9", extras = [ "cuda12" ] }
 ```
 
-Verified properties (pixi 0.76): locks with **no warnings**; `target.linux-64` applies
+Verified properties (pixi 0.81): locks with **no warnings**; `target.linux-64` applies
 to the `linux-64-cuda12` variant; and because a variant shares the base conda subdir,
-the lock is **not** bloated — CPU/`tests` envs may *list* the variant platforms but
-resolve to the same `linux-64` packages (only the cuda features add the GPU wheels).
-Always confirm with `pixi lock`, never `pixi info`.
+CPU/`tests` envs resolve to the same `linux-64` packages on it (only the cuda features
+add the GPU wheels). The lock file still grows: every environment whose features do not
+restrict `platforms` lists the variant with its own full package list — measured at
+roughly 2.8k and 5.7k added lines in two projects. Always confirm with `pixi lock`,
+never `pixi info`.
+
+Pin Python in every environment that now covers the variant, including the implicit
+`default` environment when Python only comes from `py3XX` features. Unpinned, `default`
+solved to Python 3.12 on the variant and 3.14 on `linux-64`, and `pixi lock --check`
+then failed immediately after every re-lock ("solved with system requirements
+incompatible with the tags on wheel (orjson)"). Declaring `default = [ "py314" ]` under
+`[tool.pixi.environments]` fixes it.
 
 A *separate*, real warning — "target selector `osx-arm64` does not match any of the
 platforms supported by the workspace" — means a feature references a platform not in
