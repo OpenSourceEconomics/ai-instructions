@@ -105,7 +105,11 @@ context. Do not reuse answers from previous runs. Each invocation is independent
 6. **Compare and report deviations.** For each file, compare against the tier-appropriate
    boilerplate template. Report:
 
-   - **Hook version mismatches**: e.g., ruff v0.15.1 vs template v0.15.5
+   - **Hook version mismatches**: run `prek autoupdate` and diff
+     `.pre-commit-config.yaml`; every `rev:` it moves is a mismatch. pre-commit.ci's
+     autoupdate bumps `rev:` only, so re-sync every `additional_dependencies` pin
+     tied to a rev (the ty pin below) in the same change. Report template hook
+     versions that lag the autoupdated ones as a fix needed in `ai-instructions`.
    - **Missing hooks**: hooks in the template but not in the project
    - **Extra hooks**: hooks in the project but not in the template (note these, don't
      remove — they may be intentional)
