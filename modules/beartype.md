@@ -67,7 +67,7 @@ top that maps violations to a project-defined exception class.
 
 ```python
 # src/project/_beartype_conf.py
-from beartype import BeartypeConf, BeartypeStrategy
+from beartype import BeartypeConf
 
 from project.exceptions import (
     EntryPointError,
@@ -81,7 +81,6 @@ def project_conf(error_class: type[ProjectError]) -> BeartypeConf:
     return BeartypeConf(
         is_color=False,
         is_pep484_tower=True,
-        strategy=BeartypeStrategy.On,
         violation_door_type=error_class,
         violation_param_type=error_class,
         violation_return_type=error_class,
@@ -91,7 +90,6 @@ def project_conf(error_class: type[ProjectError]) -> BeartypeConf:
 INTERNAL_CONF = BeartypeConf(
     is_color=False,
     is_pep484_tower=True,
-    strategy=BeartypeStrategy.On,
 )
 
 ENTRY_POINT_CONF = project_conf(EntryPointError)
@@ -99,10 +97,12 @@ INPUT_DATA_CONF = project_conf(InputDataError)
 # ...one per user-facing component
 ```
 
-`strategy=BeartypeStrategy.On` enables O(n) container validation (every entry in a
-mapping/sequence is checked, not just one sampled element). User-facing constructors are
-called rarely, so per-call cost is invisible. `is_pep484_tower=True` honours PEP 484's
-numeric tower so an `int` value satisfies a `float`-typed parameter.
+beartype checks one randomly sampled item per container per call (the default
+`BeartypeStrategy.O1`). `BeartypeStrategy.On`, which would check every entry, is
+unimplemented as of beartype 0.23 and silently behaves like `O1`, so leave `strategy`
+unset. When every entry of a user-supplied container matters, validate it explicitly in
+a `_fail_if_...` helper. `is_pep484_tower=True` honours PEP 484's numeric tower so an
+`int` value satisfies a `float`-typed parameter.
 
 Set `violation_door_type`, `violation_param_type`, and `violation_return_type` all to
 the project class so the same exception surfaces regardless of where the violation
