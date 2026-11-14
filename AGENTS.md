@@ -64,15 +64,12 @@ A count, a summary line, an exit code, a checksum. Never a truncated view of a l
 `head`, `tail`, and `grep -m` return output indistinguishable from the full thing.
 
 ```bash
-# Bad — shows 5 lines and looks complete; the file has 8, and nothing says so
-grep -n "envelope_at_query(" step.py | head -5
-
-# Good — every number is complete by construction; the listing is separate and whole.
-#        `grep -c` counts matching *lines*, so count occurrences instead whenever
-#        two calls can share one line.
-grep -c "envelope_at_query(" step.py           # matching lines
-grep -o "envelope_at_query(" step.py | wc -l   # call sites
-grep -n "envelope_at_query(" step.py
+# Every number is complete by construction; the listing is separate and whole.
+# `grep -c` counts matching *lines*, so count occurrences instead whenever
+# two calls can share one line.
+grep -c "parse_record(" records.py           # matching lines
+grep -o "parse_record(" records.py | wc -l   # call sites
+grep -n "parse_record(" records.py
 ```
 
 **You cannot know in advance which output becomes a claim**, so make every listing
@@ -145,13 +142,12 @@ stops.
 Zero collected is not zero failures. A filter that selects nothing, a glob that matches
 nothing, and a query that returns nothing all exit successfully.
 
-```bash
-# Bad — the pipe hands you tail's status, so a run that collected nothing
-#       and a run that was killed both read as success
-pytest -m "not slow" tests/ | tail -1
+Piping a run into `tail` hands you `tail`'s status, so a run that collected nothing and
+a run that was killed both read as success. Read the runner's own status instead:
 
-# Good — exit 5 is "nothing collected"; turn it into a real failure and pass
-#        every other status through unchanged
+```bash
+# Exit 5 is "nothing collected"; turn it into a real failure and pass
+# every other status through unchanged
 pytest -m "not slow" tests/
 rc=$?
 if [ "$rc" -eq 5 ]; then
@@ -177,9 +173,9 @@ last, because then the source cannot tell you which status you get:
 `for i in 1 2; do [ "$i" = "9" ] && continue; done` exits 1 as a final statement, and
 the identical loop over `1 9` exits 0. `set -e` does not catch either.
 
-That one character in the Bad case defeats both rules in this group at once: the status
-you read belongs to `tail`, and the output you read is truncated. It is the only place
-two of these fail on a single keystroke.
+The `| tail` pipe defeats both rules in this group at once: the status you read belongs
+to `tail`, and the output you read is truncated. It is the only place two of these fail
+on a single keystroke.
 
 A marker or filter that selects nothing is the common cause: on the command line `-m`
 *replaces* the configured expression rather than intersecting with it, so a directory
@@ -189,15 +185,12 @@ marked wholesale can deselect its entire contents and still exit successfully.
 
 When a command's success decides whether you commit, push, or continue, branch on *that*
 command's status, never on a pipeline's. A gate built from a filter does not merely leak
-— it inverts:
+— it inverts. Filter hook output for lines other than "Passed" and commit when the
+filter finds one: failing hooks leave such a line, so the filter succeeds and the commit
+lands; a clean run leaves none, so the filter fails and blocks it. Exactly backwards, in
+both directions. Gate on the runner's own status:
 
 ```bash
-# Bad — the commit is gated on grep. Hooks failing leaves a non-"Passed" line, so grep
-#       exits 0 and the commit lands; a clean run leaves none, so grep exits 1 and
-#       blocks it. Exactly backwards, in both directions.
-prek run --all-files | grep -v "Passed$" && git commit …
-
-# Good — gate on the runner's own status
 prek run --all-files > hooks.log
 rc=$?
 [ "$rc" -eq 0 ] || exit "$rc"
