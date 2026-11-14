@@ -6,8 +6,8 @@ allowed-tools: Read, Bash
 # Close Pro Audit
 
 Prepare and enforce closure for an external Pro audit, using whichever `pro-*-audit`
-skill produced the original bundle — `pro-comp-method-audit`, `pro-econ-paper-audit`,
-`pro-math-code-review`, or `pro-pylcm-scope-feasibility-audit`. That skill's own
+skill produced the original bundle — `pro-comp-method-audit`, `pro-econ-paper-audit`
+or `pro-math-code-review`. That skill's own
 `SKILL.md` is the source of truth for its exact script names and flags (most use
 `scripts/prepare_prompt.py`; `pro-math-code-review` uses `scripts/prepare_bundle.py`) —
 this command sequences them for closure and enforces the gate. Do not hardcode a script

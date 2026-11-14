@@ -64,15 +64,12 @@ A count, a summary line, an exit code, a checksum. Never a truncated view of a l
 `head`, `tail`, and `grep -m` return output indistinguishable from the full thing.
 
 ```bash
-# Bad — shows 5 lines and looks complete; the file has 8, and nothing says so
-grep -n "envelope_at_query(" step.py | head -5
-
-# Good — every number is complete by construction; the listing is separate and whole.
-#        `grep -c` counts matching *lines*, so count occurrences instead whenever
-#        two calls can share one line.
-grep -c "envelope_at_query(" step.py           # matching lines
-grep -o "envelope_at_query(" step.py | wc -l   # call sites
-grep -n "envelope_at_query(" step.py
+# Every number is complete by construction; the listing is separate and whole.
+# `grep -c` counts matching *lines*, so count occurrences instead whenever
+# two calls can share one line.
+grep -c "parse_record(" records.py           # matching lines
+grep -o "parse_record(" records.py | wc -l   # call sites
+grep -n "parse_record(" records.py
 ```
 
 **You cannot know in advance which output becomes a claim**, so make every listing
@@ -145,13 +142,12 @@ stops.
 Zero collected is not zero failures. A filter that selects nothing, a glob that matches
 nothing, and a query that returns nothing all exit successfully.
 
-```bash
-# Bad — the pipe hands you tail's status, so a run that collected nothing
-#       and a run that was killed both read as success
-pytest -m "not slow" tests/ | tail -1
+Piping a run into `tail` hands you `tail`'s status, so a run that collected nothing and
+a run that was killed both read as success. Read the runner's own status instead:
 
-# Good — exit 5 is "nothing collected"; turn it into a real failure and pass
-#        every other status through unchanged
+```bash
+# Exit 5 is "nothing collected"; turn it into a real failure and pass
+# every other status through unchanged
 pytest -m "not slow" tests/
 rc=$?
 if [ "$rc" -eq 5 ]; then
@@ -177,9 +173,9 @@ last, because then the source cannot tell you which status you get:
 `for i in 1 2; do [ "$i" = "9" ] && continue; done` exits 1 as a final statement, and
 the identical loop over `1 9` exits 0. `set -e` does not catch either.
 
-That one character in the Bad case defeats both rules in this group at once: the status
-you read belongs to `tail`, and the output you read is truncated. It is the only place
-two of these fail on a single keystroke.
+The `| tail` pipe defeats both rules in this group at once: the status you read belongs
+to `tail`, and the output you read is truncated. It is the only place two of these fail
+on a single keystroke.
 
 A marker or filter that selects nothing is the common cause: on the command line `-m`
 *replaces* the configured expression rather than intersecting with it, so a directory
@@ -189,15 +185,12 @@ marked wholesale can deselect its entire contents and still exit successfully.
 
 When a command's success decides whether you commit, push, or continue, branch on *that*
 command's status, never on a pipeline's. A gate built from a filter does not merely leak
-— it inverts:
+— it inverts. Filter hook output for lines other than "Passed" and commit when the
+filter finds one: failing hooks leave such a line, so the filter succeeds and the commit
+lands; a clean run leaves none, so the filter fails and blocks it. Exactly backwards, in
+both directions. Gate on the runner's own status:
 
 ```bash
-# Bad — the commit is gated on grep. Hooks failing leaves a non-"Passed" line, so grep
-#       exits 0 and the commit lands; a clean run leaves none, so grep exits 1 and
-#       blocks it. Exactly backwards, in both directions.
-prek run --all-files | grep -v "Passed$" && git commit …
-
-# Good — gate on the runner's own status
 prek run --all-files > hooks.log
 rc=$?
 [ "$rc" -eq 0 ] || exit "$rc"
@@ -324,7 +317,7 @@ not parse** — `pixi lock` fails with `× expected a string, found table` (and 
 will *not* catch it: it only echoes the host's own virtual packages, so the edit looks
 fine until you lock). The migration guide's example is a workspace-level one; the
 per-feature translation the warning implies is what's unsupported. Still true as of pixi
-0.81 — re-test before assuming it has been fixed.
+0.84.2 — re-test before assuming it has been fixed.
 
 Do migrate rather than live with the warning: pixi 0.81 converts the deprecated table
 into an auto-named platform variant on its own (`linux-64-cuda-13`, in older locks
@@ -427,24 +420,11 @@ changed. Words like "earlier", "previously", "now", "formerly", "the old", "befo
 fix" are red flags.
 
 ```python
-# Good — forward-looking constraint
-class _DiagnosticRow:
-    """Metadata captured during the backward-induction loop.
+class _CacheEntry:
+    """One cached download.
 
-    Holds only Python-scalar metadata — no device-array references —
-    so every (regime, period) row stays at a few bytes regardless of
-    grid size.
-    """
-
-
-# Bad — rehearses prior design
-class _DiagnosticRow:
-    """Metadata captured during the backward-induction loop.
-
-    Holds only Python-scalar metadata. The earlier design captured
-    state_action_space and a closure directly on each row, which
-    pinned every period's V template in device memory until the
-    post-loop flush.
+    Holds the file's path and checksum, never its bytes, so the cache
+    index stays small however large the files are.
     """
 ```
 
@@ -454,7 +434,7 @@ class _DiagnosticRow:
 has no access to the conversation, review, or tracker. Banned in comments, docstrings,
 and test names:
 
-- **PR and issue numbers** — `#334 removed the host stalls`.
+- **PR and issue numbers** — `#123 fixed the timeout`.
 - **Audit and review finding labels** — `(E4, F7 guard)`, `the F1 bug`. `F7` resolves
   only to a conversation that is over.
 - **Review round numbers** — `round-3 audit F2`.
@@ -464,20 +444,13 @@ and test names:
 **Delete the label and see whether the sentence still teaches anything.** If not,
 rewrite it to say why the invariant holds.
 
-Magic numbers tied to a specific model size or hardware
-(`~2 MB at production grid sizes`, `fits on a 16 GB device`) imply a fixed scale that's
-only true on whichever model/box the comment was written against. State the qualitative
-dependency instead.
+Magic numbers tied to a specific model size or hardware (`~2 MB at full size`,
+`fits on a 16 GB device`) imply a fixed scale that's only true on whichever model/box
+the comment was written against. State the qualitative dependency instead.
 
 ```python
-# Good — qualitative dependency
-# Frees per-period intermediate buffers (V_arr-shaped, so
-# model-dependent) so they don't stack up across the loop.
-
-# Bad — PR reference + magic number
-# Frees per-period intermediate buffers (~2 MB each at production
-# grid sizes) so we don't re-introduce the host stalls that #334
-# removed.
+# Frees each batch's buffers once the batch is written, so memory
+# stays at one batch however many batches run.
 ```
 
 The `no-internal-references` hook catches the labelled forms; unlabelled history stays a
@@ -485,22 +458,15 @@ review responsibility.
 
 ### Bulleted lists for enumerated cases
 
-When describing a fixed set of cases (log levels, regime kinds, parameter types,
+When describing a fixed set of cases (log levels, file formats, parameter types,
 dispatch strategies), use one bullet per case rather than running prose. Bullets scan;
 prose hides cases.
 
 ```python
-# Good — scannable
-# Gate falls out of the public log level:
-# - `"off"` ⇒ nothing (skips even the NaN fail-fast)
-# - `"warning"` / `"progress"` ⇒ NaN/Inf only
-# - `"debug"` ⇒ adds the min/max/mean trio
-
-
-# Bad — buried in prose
-# Gate falls out of the public log level: `"off"` ⇒ nothing,
-# `"warning"` / `"progress"` ⇒ NaN/Inf only, `"debug"` ⇒ adds the
-# min/max/mean trio. `"off"` skips even the NaN fail-fast.
+# Output falls out of the verbosity setting:
+# - `"quiet"` ⇒ errors only
+# - `"normal"` ⇒ adds warnings
+# - `"verbose"` ⇒ adds per-step timings
 ```
 
 ## Error Handling
@@ -538,16 +504,8 @@ Test docstrings state what *should* be true, in user-facing terms. Pretend the r
 has never seen the PR. They should not need to.
 
 ```python
-# Good — behavior, in plain language
-def test_simulate_with_chained_transitions_yields_expected_next_wealth():
-    """`next_wealth_t = wealth_t - c_t + 0.1 * next_aime_t` holds in simulation."""
-
-
-# Bad — rehearses the prior bug or implementation history
-def test_solve_resolves_chain_via_dags():
-    """Before the fix, `_resolve_fixed_params` raised
-    `InvalidParamsError: Missing required parameter: ...` because
-    `create_regime_params_template` classified ..."""
+def test_parse_date_accepts_iso_week_format():
+    """`parse_date("2024-W05-2")` returns 30 January 2024."""
 ```
 
 Rule of thumb: **would the docstring still make sense in 9 months without the PR
@@ -558,16 +516,11 @@ context?** If not, rewrite it.
 Assert *what* the result is, not just that it didn't crash.
 
 ```python
-# Good — analytical value with explicit tolerance
-np.testing.assert_allclose(curr["wealth"], expected_next_wealth, atol=1e-6)
-
-# Bad — passes whether the math is right or not
-assert not jnp.any(jnp.isnan(V_arr))
-assert df["wealth"].notna().all()
+np.testing.assert_allclose(result["balance"], expected_balance, atol=1e-6)
 ```
 
-`not isnan` and `no exception raised` belong in CI smoke tests, not in the unit tests
-for the feature itself.
+An assertion that only checks for no NaN or no exception passes whether the math is
+right or not; it belongs in a CI smoke test, not in the unit tests for the feature.
 
 ### Mechanics
 
