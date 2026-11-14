@@ -491,16 +491,15 @@ prose hides cases.
 
 ```python
 # Good — scannable
-# Gate falls out of the public log level:
-# - `"off"` ⇒ nothing (skips even the NaN fail-fast)
-# - `"warning"` / `"progress"` ⇒ NaN/Inf only
-# - `"debug"` ⇒ adds the min/max/mean trio
+# Output falls out of the verbosity setting:
+# - `"quiet"` ⇒ errors only
+# - `"normal"` ⇒ adds warnings
+# - `"verbose"` ⇒ adds per-step timings
 
 
 # Bad — buried in prose
-# Gate falls out of the public log level: `"off"` ⇒ nothing,
-# `"warning"` / `"progress"` ⇒ NaN/Inf only, `"debug"` ⇒ adds the
-# min/max/mean trio. `"off"` skips even the NaN fail-fast.
+# Output falls out of the verbosity setting: `"quiet"` prints errors
+# only, `"normal"` adds warnings, and `"verbose"` adds per-step timings.
 ```
 
 ## Error Handling
