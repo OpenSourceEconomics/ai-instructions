@@ -565,12 +565,25 @@ directories rather than dropping the hook.
 them. It reports every function, method, property or class under
 `[tool.dead-code] internal`, and every `_`-private one under `public`, that nothing
 outside the tests uses: code whose only callers are tests counts as dead, and either
-moves into the test suite or goes. Unused test helpers are reported too. A use vulture
-cannot see — a protocol method called through an untyped instance, a
-decorator-registered rule, a pytest hook, a name used only inside a `python -c` string —
-is declared as a `[[tool.dead-code.allow]]` entry with `path` and `name` globs and a
-`reason`, and an entry that matches nothing fails the hook, so the allowlist cannot
-outlive the code it excuses:
+moves into the test suite or goes. Unused test helpers are reported too.
+
+A function that a decorator hands to a registry, a loader or a DAG is never called by
+name. List such decorators under `registering-decorators` (globs, written as vulture
+writes them: `@` plus the dotted name); whatever carries one counts as used:
+
+```toml
+[tool.dead-code]
+registering-decorators = [ "@policy_function", "@persona_*_element" ]
+```
+
+A definition inside a `with pytest.raises(...)` or `with pytest.warns(...)` block is
+never reported, because defining it is the test.
+
+Any other use vulture cannot see — a protocol method called through an untyped instance,
+a pytest hook, a name used only inside a `python -c` string — is declared as a
+`[[tool.dead-code.allow]]` entry with `path` and `name` globs and a `reason`, and an
+entry that matches nothing fails the hook, so the allowlist cannot outlive the code it
+excuses:
 
 ```toml
 [[tool.dead-code.allow]]
