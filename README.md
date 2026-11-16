@@ -95,6 +95,7 @@ ai-instructions/
 │   └── close-pro-audit.md
 ├── hooks/                 # Scripts invoked by downstream pre-commit configs and CI
 │   ├── check_pre_push_installed.py
+│   ├── dead_code.py
 │   ├── fix_notebook_cell_source.py
 │   └── verify_bibliography.py
 └── boilerplate/           # Dev environment config templates
