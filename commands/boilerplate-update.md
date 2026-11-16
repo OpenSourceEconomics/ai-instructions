@@ -110,6 +110,13 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      autoupdate bumps `rev:` only, so re-sync every `additional_dependencies` pin
      tied to a rev (the ty pin below) in the same change. Report template hook
      versions that lag the autoupdated ones as a fix needed in `ai-instructions`.
+   - **Tool version floors**: `pixi lock` keeps a locked version for as long as it
+     satisfies the spec, so `"*"` or an old floor never upgrades. Check the locked
+     versions, not just the specs, and raise the floor where an old one breaks:
+     `prek >= 0.5.9` (older prek installs a uv that cannot build the ty hook); for
+     Jupyter Book projects, `jupyter-book >= 2.1.7` and `mystmd >= 1.13.0` (the build
+     fetches the newest MyST theme, and an older engine hangs on it, so Read the
+     Docs kills the build).
    - **Missing hooks**: hooks in the template but not in the project
    - **Extra hooks**: hooks in the project but not in the template (note these, don't
      remove — they may be intentional)

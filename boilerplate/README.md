@@ -296,7 +296,9 @@ sequence_style = "block_style"
 
 [tool.pixi.dependencies]
 jupyterlab = "*"
-prek = "*"
+# `pixi lock` keeps a locked version while it satisfies the spec, so `"*"` never
+# upgrades. prek below 0.5.9 installs a uv that cannot build ty-pre-commit.
+prek = ">=0.5.9"
 python = "~=3.14.0"
 
 [tool.pixi.pypi-dependencies]
