@@ -154,7 +154,9 @@ context. Do not reuse answers from previous runs. Each invocation is independent
    - **`dead-code` hook**: For projects with Python code under `src/`, ensure the
      `dead-code` local hook (`.ai-instructions/hooks/dead_code.py`, vulture), its
      `[tool.dead-code]` table in `pyproject.toml`, its `ci.skip` entry, and the
-     `run-ty` workflow step with `submodules: true` on checkout are present. Choose
+     `run-ty` workflow step with `submodules: true` on checkout are present, and that
+     `[tool.ty] src.exclude` lists `.ai-instructions` (ty otherwise fails to resolve
+     the hook's `vulture` import). Choose
      `public` for a library's package and `internal` for code with no public API. If
      the project has no hook yet, run it once and report the violation count before
      proposing it; on a large first report, propose working the list down rather than

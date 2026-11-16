@@ -228,6 +228,9 @@ lint.pydocstyle.convention = "google"
 # ty resolves third-party imports from this pixi env. The pre-commit hook runs
 # ty directly; pixi owns the project environment. Run `pixi install` once.
 environment.python = ".pixi/envs/py314"
+# The `.ai-instructions` hook scripts import tools that exist only in their
+# pre-commit environments (vulture), so ty cannot resolve them.
+src.exclude = [ ".ai-instructions" ]
 # Promote all warn/ignore-default rules to error.
 # Rules that default to error are omitted (already enforced).
 rules.ambiguous-protocol-member = "error"
