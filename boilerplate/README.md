@@ -248,6 +248,13 @@ ini_options.norecursedirs = [ "docs" ]
 ini_options.paths = [ "./src/project_name" ]
 ini_options.pdbcls = "pdbp:Pdb"
 
+# Read by the `dead-code` hook (`.ai-instructions/hooks/dead_code.py`). A library
+# lists its package under `public`, so only `_`-private definitions are reported;
+# a research project with no public API lists it under `internal` instead.
+[tool.dead-code]
+consumers = [ "src", "docs" ]
+public = [ "src/project_name/" ]
+
 # codespell passes most econ/numerics jargon (crra, egm, endog, exog, gmm,
 # hessian, jacobian, heteroskedasticity) but not all of it, so the list below
 # carries the ones it does flag. Measured on a solver codebase: `statics` (as in
@@ -266,7 +273,7 @@ skip = "*.lock,*.svg,*.bib,*.ipynb"
 
 [tool.pyproject-fmt]
 column_width = 88
-max_supported_python = "3.14"
+max_supported_python = "3.15"
 table_format = "long"
 collapse_tables = [ "tool.hatch", "tool.pytest", "tool.pytask", "tool.ty" ]
 expand_tables = [
@@ -344,7 +351,7 @@ lint.pydocstyle.convention = "google"
 
 [tool.pyproject-fmt]
 column_width = 88
-max_supported_python = "3.14"
+max_supported_python = "3.15"
 table_format = "long"
 collapse_tables = [ "tool.hatch", "tool.pytest", "tool.pytask", "tool.ty" ]
 ```
@@ -365,7 +372,7 @@ repos:
       - id: check-hooks-apply
       - id: check-useless-excludes
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.30.1
+    rev: v2.30.6
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/lyz-code/yamlfix
@@ -407,11 +414,11 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.38.2
+    rev: 0.39.0
     hooks:
       - id: check-github-workflows
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.5
     hooks:
       - id: ruff-check
         args:
@@ -426,14 +433,14 @@ repos:
           - pyi
           - python
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.85
+    rev: v0.0.104
     hooks:
       - id: ty
         # Run ty directly so import resolution uses `[tool.ty] environment.python`.
         # Keep this dependency pin aligned with the hook revision above.
         entry: ty check
         additional_dependencies:
-          - ty==0.0.85
+          - ty==0.0.104
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:
@@ -489,6 +496,15 @@ repos:
         language: script
         types:
           - jupyter
+      # Whole-repository analysis: a change in one file can orphan code in another.
+      - id: dead-code
+        name: no internal or test code without a caller
+        entry: python .ai-instructions/hooks/dead_code.py
+        language: python
+        additional_dependencies:
+          - vulture==2.16
+        pass_filenames: false
+        files: \.py$|^pyproject\.toml$
       - id: no-hardcoded-user-paths
         name: no hardcoded user-specific absolute paths
         language: pygrep
@@ -517,18 +533,18 @@ ci:
   # the GitHub Actions `run-ty` job covers type checking, and pixi-lock-check
   # needs a pixi binary that pre-commit.ci does not provide.
   #
-  # The two script hooks above run files from the `.ai-instructions` submodule,
-  # and pre-commit.ci clones without submodules, so there they fail as a missing
-  # executable rather than running. `pre-push-hooks-installed` asks about the
-  # local clone and is meaningless on a runner anyway; the notebook check does
-  # lose CI coverage, and holds only where the submodule is present. If a
-  # project wants it enforced on CI, give the `actions/checkout` step
-  # `submodules: true` and run `prek` from a workflow instead.
+  # The hooks above that run files from the `.ai-instructions` submodule
+  # fail as a missing file on pre-commit.ci, which clones without submodules.
+  # `pre-push-hooks-installed` asks about the local clone and is meaningless on
+  # a runner anyway; `dead-code` runs in the GitHub Actions `run-ty` job, which
+  # checks out the submodule; the notebook check loses CI coverage and holds
+  # only where the submodule is present.
   skip:
     - ty
     - pixi-lock-check
     - pre-push-hooks-installed
     - notebook-cell-source-format
+    - dead-code
 ```
 
 The `pre-push` stage needs installing once per clone — `prek install -t pre-push`
@@ -539,6 +555,27 @@ that omission fails loudly on the next commit instead of going unnoticed.
 mechanize rules `AGENTS.md` already states in prose. They are near-free on actively
 developed projects but can fire heavily on older code; add `exclude:` for legacy
 directories rather than dropping the hook.
+
+`dead-code` runs vulture twice over the repository, once without the tests and once with
+them. It reports every function, method, property or class under
+`[tool.dead-code] internal`, and every `_`-private one under `public`, that nothing
+outside the tests uses: code whose only callers are tests counts as dead, and either
+moves into the test suite or goes. Unused test helpers are reported too. A use vulture
+cannot see — a protocol method called through an untyped instance, a
+decorator-registered rule, a pytest hook, a name used only inside a `python -c` string —
+is declared as a `[[tool.dead-code.allow]]` entry with `path` and `name` globs and a
+`reason`, and an entry that matches nothing fails the hook, so the allowlist cannot
+outlive the code it excuses:
+
+```toml
+[[tool.dead-code.allow]]
+path = "tests/*"
+name = "pytest_*"
+reason = "pytest hook implementations, called by the plugin manager by name."
+```
+
+On a codebase that never ran it, expect a long first report; work it down before adding
+the hook rather than starting with a wholesale allowlist.
 
 `no-internal-references` is deliberately calibrated for a low false-positive rate rather
 than for coverage, since a hook that cries wolf gets excluded wholesale. It matches a
@@ -574,7 +611,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.5
     hooks:
       - id: ruff-check
         args:
@@ -627,9 +664,9 @@ jobs:
           - py314
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: prefix-dev/setup-pixi@v0.11.0
+      - uses: prefix-dev/setup-pixi@v0.11.3
         with:
-          pixi-version: v0.81.0
+          pixi-version: v0.84.2
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
@@ -652,15 +689,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: prefix-dev/setup-pixi@v0.11.0
         with:
-          pixi-version: v0.81.0
+          # `.ai-instructions` carries the dead-code script.
+          submodules: true
+      - uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          pixi-version: v0.84.2
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           frozen: true
           environments: py314
       - name: Run ty
         run: pixi run --locked -e py314 prek run ty --all-files
+        shell: bash -el {0}
+      - name: Refuse dead internal and test code
+        run: pixi run --locked -e py314 prek run dead-code --all-files
         shell: bash -el {0}
 ```
 
@@ -709,7 +752,7 @@ jobs:
         with:
           # `.ai-instructions` carries the verification script.
           submodules: true
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.14'
       - name: Verify bibliography

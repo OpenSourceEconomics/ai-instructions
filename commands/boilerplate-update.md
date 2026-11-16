@@ -151,6 +151,14 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      check for `no-hardcoded-user-paths` and `no-section-separator-comments`. These fire
      heavily on older code — if a project has many pre-existing violations, propose an
      `exclude:` for the legacy paths rather than omitting the hook.
+   - **`dead-code` hook**: For projects with Python code under `src/`, ensure the
+     `dead-code` local hook (`.ai-instructions/hooks/dead_code.py`, vulture), its
+     `[tool.dead-code]` table in `pyproject.toml`, its `ci.skip` entry, and the
+     `run-ty` workflow step with `submodules: true` on checkout are present. Choose
+     `public` for a library's package and `internal` for code with no public API. If
+     the project has no hook yet, run it once and report the violation count before
+     proposing it; on a large first report, propose working the list down rather than
+     a wholesale allowlist.
    - **codespell**: ensure the hook and a `[tool.codespell]` section exist. Standard
      econ/numerics jargon is not flagged, so an over-long `ignore-words-list` is a smell;
      German-language projects legitimately need more entries.
