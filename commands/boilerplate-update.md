@@ -167,7 +167,9 @@ context. Do not reuse answers from previous runs. Each invocation is independent
      `public` for a library's package and `internal` for code with no public API. If
      the project has no hook yet, run it once and report the violation count before
      proposing it; on a large first report, propose working the list down rather than
-     a wholesale allowlist.
+     a wholesale allowlist. If most reports are functions that a decorator registers
+     or a loader collects (rules, DAG nodes, CLI commands), name those decorators in
+     `registering-decorators` instead of writing allow entries.
    - **codespell**: ensure the hook and a `[tool.codespell]` section exist. Standard
      econ/numerics jargon is not flagged, so an over-long `ignore-words-list` is a smell;
      German-language projects legitimately need more entries.

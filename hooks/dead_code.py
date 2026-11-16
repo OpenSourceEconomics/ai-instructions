@@ -9,6 +9,7 @@ consumers = ["src", "docs"]  # code whose uses count, besides the tests
 internal = ["src/_project/"]  # report every unused definition here
 public = ["src/project/"]  # report only `_`-private unused definitions here
 tests = "tests"  # optional; the default is "tests"
+registering-decorators = ["@rule", "@app.*"]  # optional; globs
 
 [[tool.dead-code.allow]]
 path = "src/_project/visitors.py"  # glob
@@ -30,13 +31,23 @@ are not reported (dataclass and record fields are read by name at runtime), nor 
 imports (ruff's F401 covers them). vulture reads `.py` files only, so a use that exists
 only in a notebook is invisible.
 
-A use that vulture cannot see, such as a protocol method called through an instance it
-cannot type, a decorator-registered rule or a pytest hook, is declared as an `allow`
-entry with its reason. An entry that no longer matches anything is itself a violation,
+A function that a decorator hands to a registry, a loader or a DAG is used through that
+decorator and never by name. Name such decorators in `registering-decorators`, as
+vulture writes them (`@` plus the dotted name, globs allowed); whatever carries one
+counts as used.
+
+A definition inside a `with pytest.raises(...)` or `with pytest.warns(...)` block is
+not reported: defining it is the test, since the decorator or class body is what raises.
+
+Any other use that vulture cannot see, such as a protocol method called through an
+instance it cannot type or a pytest hook, is declared as an `allow` entry with its
+reason. An entry that no longer matches anything is itself a violation,
 so the allowlist cannot outlive the code it excuses.
 """
 
+import ast
 import fnmatch
+import functools
 import sys
 import tomllib
 from dataclasses import dataclass
@@ -60,6 +71,8 @@ class Config:
     """Path prefixes under which only `_`-private unused definitions are reported."""
     tests: str
     """The test directory."""
+    registering_decorators: tuple[str, ...]
+    """Globs of decorators whose targets count as used."""
     allow: tuple["AllowEntry", ...]
     """Uses vulture cannot see."""
 
@@ -127,6 +140,7 @@ def load_config(*, path: Path) -> Config:
         internal=tuple(table.get("internal", [])),
         public=tuple(table.get("public", [])),
         tests=table.get("tests", "tests"),
+        registering_decorators=tuple(table.get("registering-decorators", [])),
         allow=tuple(_allow_entry(entry) for entry in table.get("allow", [])),
     )
 
@@ -150,8 +164,10 @@ def check(*, root: Path, config: Config) -> list[str]:
 
 def find_orphans(*, root: Path, config: Config) -> list[Orphan]:
     """Return every orphaned definition under `root`, test-only ones marked."""
-    without_tests = _unused(root=root, paths=config.consumers)
-    with_tests = set(_unused(root=root, paths=(*config.consumers, config.tests)))
+    without_tests = _unused(root=root, paths=config.consumers, config=config)
+    with_tests = set(
+        _unused(root=root, paths=(*config.consumers, config.tests), config=config)
+    )
     orphans = [
         Orphan(
             path=path,
@@ -171,11 +187,15 @@ def find_orphans(*, root: Path, config: Config) -> list[Orphan]:
     return sorted(orphans, key=lambda o: (o.path, o.line))
 
 
-def _unused(*, root: Path, paths: tuple[str, ...]) -> list[tuple[str, int, str, str]]:
+def _unused(
+    *, root: Path, paths: tuple[str, ...], config: Config
+) -> list[tuple[str, int, str, str]]:
     """Return `(path, line, kind, name)` for vulture's unused definitions."""
     # pytest resolves fixtures by parameter name or `name=` alias, or applies them
     # with `autouse=True`; vulture sees none of these.
-    scanner = vulture.Vulture(ignore_decorators=["@pytest.fixture"])
+    scanner = vulture.Vulture(
+        ignore_decorators=["@pytest.fixture", *config.registering_decorators]
+    )
     scanner.scavenge([str(root / p) for p in paths if (root / p).exists()])
     if scanner.exit_code != vulture.core.ExitCode.NoDeadCode:
         # A file vulture cannot parse is skipped, and every use inside it is lost.
@@ -192,7 +212,27 @@ def _unused(*, root: Path, paths: tuple[str, ...]) -> list[tuple[str, int, str, 
         # A dunder is called by the data model, never by name.
         if item.typ in KINDS
         and not (item.name.startswith("__") and item.name.endswith("__"))
+        and not any(
+            first <= item.first_lineno <= last
+            for first, last in _expected_failure_blocks(str(item.filename))
+        )
     ]
+
+
+@functools.cache
+def _expected_failure_blocks(filename: str) -> tuple[tuple[int, int], ...]:
+    """Return the line spans of `with pytest.raises/warns(...)` blocks in a file."""
+    tree = ast.parse(Path(filename).read_text(encoding="utf-8"))
+    return tuple(
+        (node.lineno, node.end_lineno or node.lineno)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.With)
+        and any(
+            isinstance(item.context_expr, ast.Call)
+            and ast.unparse(item.context_expr.func) in {"pytest.raises", "pytest.warns"}
+            for item in node.items
+        )
+    )
 
 
 def _in_scope(*, path: str, name: str, config: Config) -> bool:
