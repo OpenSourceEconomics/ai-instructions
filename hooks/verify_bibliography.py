@@ -47,6 +47,13 @@ TITLE_SIMILARITY_FLOOR = 0.75
 YEAR_SLACK = 1
 """Online-first and print years legitimately differ by one."""
 
+REVISED_PREPRINT_DOI = "10.2139/ssrn."
+"""SSRN keeps one DOI across revisions and CrossRef dates it at first posting.
+
+A later year on such an entry cites a revision, not a different work; an earlier
+year still contradicts the record.
+"""
+
 IDENTIFYING_FIELDS = ("title", "year")
 ALIASES = {
     "year": ("year", "date"),
@@ -257,8 +264,12 @@ def compare_metadata(entry: Entry, record: dict, report: Report) -> None:
     actual_year = _crossref_year(record)
     claimed_year = re.search(r"\d{4}", get_field(entry, "year"))
     if actual_year and claimed_year:
-        difference = abs(int(claimed_year.group()) - actual_year)
-        if difference > YEAR_SLACK:
+        claimed = int(claimed_year.group())
+        revised_preprint = (
+            REVISED_PREPRINT_DOI in entry.fields["doi"].lower()
+            and claimed > actual_year
+        )
+        if abs(claimed - actual_year) > YEAR_SLACK and not revised_preprint:
             report.error(
                 entry,
                 f"year {claimed_year.group()} contradicts CrossRef's {actual_year}",
