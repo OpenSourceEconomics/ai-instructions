@@ -355,20 +355,23 @@ Do not lower the floor: below 0.3.10 the sentinels break under cloudpickle, sile
 anything that does not exercise a pickled DAG in its tests. No git or fork override is
 needed — the fix is on PyPI.
 
-## jaxtyping `Ellipsis` shim (under `from __future__ import annotations`)
+## jaxtyping shape strings start with a space
 
-Projects supporting Python < 3.14 keep `from __future__ import annotations` (PEP 563).
-Under that import, an annotation like `Int[Array, ...]` is stored as the source string
-`"Int[Array, ...]"`; runtime consumers (beartype, jaxtyping) `eval` it back, producing
-`Int[Array, Ellipsis]`. jaxtyping's subscript handler then calls `dim_str.strip()` and
-dies with `AttributeError` because `Ellipsis` is not a string. The shim coerces a bare
-`Ellipsis` to `"..."` inside `_MetaAbstractDtype.__getitem__`; see
-[`ttsim/_jaxtyping_patch.py`](https://github.com/ttsim-dev/ttsim/blob/main/src/ttsim/_jaxtyping_patch.py).
-Import it before any jaxtyping-subscripted type is created. Not fixed upstream:
-jaxtyping 0.3.11, the latest release, still raises this `AttributeError` on
-`Int[Array, ...]`. Projects on `requires-python >= 3.14` that have dropped
-`from __future__ import annotations` do not need the shim; they write the dimension as
-the string `"..."`, as pylcm does.
+The shape in `Float[Array, " n_obs"]` is always a string, and jaxtyping fails on
+anything else: a bare `Float[Array, ...]` raises
+`AttributeError: 'ellipsis' object has no attribute 'strip'` once the annotation is
+evaluated.
+
+Write every shape string that is also a valid Python expression with a **leading
+space**: `" ..."`, `" n_obs"`. jaxtyping strips it. Without the space, ruff's `UP037`
+("remove quotes from type annotation") takes the string for a quoted forward reference
+and its autofix unquotes it — `"..."` becomes a bare `...`, `"n_obs"` a bare name.
+`UP037` does this wherever annotations are deferred: under
+`from __future__ import annotations` and with `target-version` `py314` or later
+(observed with ruff 0.17.5). Multi-word shapes such as `"n_periods n_states"` are not
+valid expressions and are left alone.
+
+Do not monkey-patch jaxtyping to accept a bare `Ellipsis`; fix the spelling instead.
 
 ## Ruff configuration
 
